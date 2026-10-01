@@ -1,0 +1,3 @@
+import fs from 'node:fs';import {config} from './admin-session.mjs';
+const form=new FormData();form.append('metadata',JSON.stringify({name:'team-admin',entrypoint_path:'index.ts',verify_jwt:false}));form.append('file',new Blob([fs.readFileSync('supabase/functions/team-admin/index.ts')],{type:'application/typescript'}),'index.ts');
+const r=await fetch(`https://api.supabase.com/v1/projects/${config.ref}/functions/deploy?slug=team-admin`,{method:'POST',headers:{Authorization:`Bearer ${config.pat}`},body:form});if(!r.ok)throw new Error(`Deploy: ${r.status} ${await r.text()}`);const result=await r.json();console.log(JSON.stringify({name:result.name,status:result.status,version:result.version}));

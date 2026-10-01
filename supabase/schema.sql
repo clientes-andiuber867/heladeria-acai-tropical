@@ -1,0 +1,3 @@
+-- Archivo conservado como referencia de ubicación.
+-- La fuente de verdad del esquema está en supabase/migrations/.
+-- No ejecutar el antiguo esquema demo: las migraciones ya están aplicadas al proyecto.

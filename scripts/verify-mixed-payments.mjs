@@ -1,0 +1,35 @@
+import {sql,secret,url} from './admin-session.mjs';import {createClient} from '@supabase/supabase-js';import fs from 'node:fs';import assert from 'node:assert/strict';
+const svc=createClient(url,secret,{auth:{persistSession:false}});const path='qa-'+crypto.randomUUID()+'.png';const up=await svc.storage.from('payment-qr').upload(path,fs.readFileSync('public/logo.png'),{contentType:'image/png'});assert.equal(up.error,null);
+try {await sql(`BEGIN;
+SELECT set_config('request.jwt.claim.sub',(SELECT id::text FROM profiles WHERE role='admin' AND active LIMIT 1),true);
+CREATE FUNCTION pg_temp.reject(q text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN BEGIN EXECUTE q; EXCEPTION WHEN OTHERS THEN RETURN; END; RAISE EXCEPTION 'Expected rejection: %',q; END $$;
+DO $$ DECLARE p uuid; items jsonb; ver uuid; sale uuid; req uuid:=gen_random_uuid(); baseline jsonb; result jsonb; BEGIN
+INSERT INTO products(name,category,price) VALUES('QA split payment',(select name from categories limit 1),25) RETURNING id INTO p;
+items=jsonb_build_array(jsonb_build_object('id',p,'qty',1,'expected_price',25));
+DELETE FROM payment_settings;
+PERFORM pg_temp.reject(format('select complete_sale(%L,%L,%L)',gen_random_uuid(),items,'QR'));
+PERFORM configure_payment_qr('${path}','QA bank');SELECT version INTO ver FROM payment_settings;
+baseline=dashboard_summary(current_date-1,current_date+1);
+sale=complete_sale(req,items,'Mixto',20,'test',10,15,ver);
+IF NOT EXISTS(select 1 from sales where id=sale and cash_amount=10 and qr_amount=15 and cash_received=20 and qr_path='${path}') THEN RAISE EXCEPTION 'Split failed'; END IF;
+IF complete_sale(req,items,'Mixto',20,'test',10,15,ver)<>sale THEN RAISE EXCEPTION 'Idempotency failed'; END IF;
+result=dashboard_summary(current_date-1,current_date+1);
+IF (result->>'cash')::numeric-(baseline->>'cash')::numeric<>10 OR (result->>'qr')::numeric-(baseline->>'qr')::numeric<>15 THEN RAISE EXCEPTION 'Dashboard failed'; END IF;
+PERFORM pg_temp.reject(format('select complete_sale(%L,%L,%L,20,%L,10,14,%L)',gen_random_uuid(),items,'Mixto','',ver));
+PERFORM pg_temp.reject(format('select complete_sale(%L,%L,%L,5,%L,10,15,%L)',gen_random_uuid(),items,'Mixto','',ver));
+PERFORM pg_temp.reject(format('select complete_sale(%L,%L,%L,20,%L,10.001,14.999,%L)',gen_random_uuid(),items,'Mixto','',ver));
+PERFORM configure_payment_qr('${path}','QA changed');
+PERFORM pg_temp.reject(format('select complete_sale(%L,%L,%L,NULL,%L,NULL,NULL,%L)',gen_random_uuid(),items,'QR','',ver));
+SELECT version INTO ver FROM payment_settings;
+PERFORM complete_sale(gen_random_uuid(),items,'QR',NULL,'',NULL,NULL,ver);
+PERFORM complete_sale(gen_random_uuid(),items,'Efectivo',30,'');
+PERFORM void_sale(sale,'QA cancellation');result=dashboard_summary(current_date-1,current_date+1);
+IF (result->>'cash')::numeric-(baseline->>'cash')::numeric<>25 OR (result->>'qr')::numeric-(baseline->>'qr')::numeric<>25 THEN RAISE EXCEPTION 'Voided aggregation failed'; END IF;
+END $$;
+UPDATE profiles SET role='cashier' WHERE id=auth.uid();
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.reject('select configure_payment_qr(''${path}'',''not allowed'')');
+UPDATE payment_settings SET recipient='not allowed';
+DO $$ BEGIN IF EXISTS(select 1 from payment_settings where recipient='not allowed') THEN RAISE EXCEPTION 'Cashier changed settings'; END IF; END $$;
+SELECT pg_temp.reject('insert into storage.objects(bucket_id,name) values(''payment-qr'',''unauthorized.png'')');
+ROLLBACK;`);console.log('PASS mixed/cash/QR, change amounts, idempotency, totals, invalid splits, stale QR, missing QR, voids and cashier permissions (all rolled back).');}finally{await svc.storage.from('payment-qr').remove([path]);}

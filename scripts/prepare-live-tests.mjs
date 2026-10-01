@@ -1,0 +1,4 @@
+import fs from 'node:fs';import path from 'node:path';import {randomUUID} from 'node:crypto';import {createClient} from '@supabase/supabase-js';import {authAdmin,url,secret,anon} from './admin-session.mjs';
+const tag=`QA-${randomUUID().slice(0,8)}`;const password=`Qa!${randomUUID()}9x`;const service=createClient(url,secret,{auth:{persistSession:false}});const users={};
+for(const role of ['admin','cashier','other']){const email=`${tag.toLowerCase()}-${role}@example.com`;const u=await authAdmin('users','POST',{email,password,email_confirm:true,user_metadata:{display_name:`${tag} ${role}`},app_metadata:{role:role==='admin'?'admin':'cashier'}});users[role]={id:u.id,email,password};const {error}=await service.from('profiles').update({must_change_password:false}).eq('id',u.id);if(error)throw error;}
+fs.writeFileSync(path.join(process.env.TEMP,'acai-live-tests.json'),JSON.stringify({tag,users,url,anon}));console.log('Temporary test accounts prepared.');
