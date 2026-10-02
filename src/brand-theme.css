@@ -1485,4 +1485,86 @@ body {
   }
 }
 
-
+.cash-register {
+  margin-bottom: 22px;
+  padding: 22px;
+  border-top: 3px solid #a8c86d;
+}
+.cash-register-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cash-register h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #452a54;
+}
+.cash-register p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.cash-register-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 14px 0;
+  border-top: 1px solid #eee7df;
+}
+.cash-register-totals span {
+  font-size: 11px;
+  color: #63566d;
+}
+.cash-register-totals b {
+  display: block;
+  font-size: 19px;
+  color: #34233e;
+  margin-top: 5px;
+}
+.cash-history {
+  max-height: 360px;
+  overflow: auto;
+}
+.cash-history article {
+  padding: 14px 0;
+  border-bottom: 1px solid #e6dfeb;
+}
+.cash-history small {
+  display: block;
+  margin-top: 6px;
+}
+.today-only {
+  padding: 14px 18px;
+  background: #edf3df;
+  color: #40542d;
+  border-radius: 12px;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .cash-register-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.page-heading .export-excel-button {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: #e4f3e8; color: #185d37; border: 1px solid #9ac8a8;
+  padding: 12px 18px; border-radius: 12px; font-weight: 700;
+  box-shadow: 0 3px 10px #132c1814; cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.page-heading .export-excel-button:hover:not(:disabled) {
+  background: #cee9d6; transform: translateY(-2px);
+  box-shadow: 0 6px 18px #173b252b, 0 0 0 3px #a4cfad40;
+}
+.page-heading .export-excel-button:focus-visible {
+  outline: 3px solid #a8d5ae; outline-offset: 4px;
+}
+.page-heading .export-excel-button:disabled {opacity: .65; cursor: wait;}
+@media (prefers-reduced-motion: reduce) {
+  .page-heading .export-excel-button {transition: none;}
+  .page-heading .export-excel-button:hover:not(:disabled) {transform: none;}
+}

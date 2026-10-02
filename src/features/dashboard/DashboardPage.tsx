@@ -13,7 +13,7 @@ import { DateFilter } from "../../components/DateFilter";
 import { Loading, ErrorState, Empty } from "../../components/States";
 import { getDashboard } from "../../services/sales";
 import { useCatalog } from "../../context/CatalogContext";
-import { day, money, stamp, errorMessage } from "../../lib/format";
+import { day, orderCode, money, stamp, errorMessage } from "../../lib/format";
 import { supabase } from "../../lib/supabase";
 import { ProductRanking } from "./ProductRanking";
 import { Receipt } from "../sales/Receipt";
@@ -298,7 +298,7 @@ export function DashboardPage({
                         )}
                       </span>
                       <span className="recent-sale-info">
-                        <strong>Pedido #{s.id.slice(0, 6)}</strong>
+                        <strong>Pedido {orderCode(s)}</strong>
                         <small>{stamp(s.created_at)}</small>
                       </span>
                       <span className="recent-sale-value">

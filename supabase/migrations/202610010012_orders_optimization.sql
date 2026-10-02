@@ -1,0 +1,12 @@
+BEGIN;
+LOCK TABLE sales IN ACCESS EXCLUSIVE MODE;
+CREATE SEQUENCE public.order_number_seq;
+ALTER TABLE sales ADD COLUMN order_number bigint;
+WITH ordered AS (SELECT id,row_number() OVER(ORDER BY created_at,id) n FROM sales) UPDATE sales s SET order_number=o.n FROM ordered o WHERE o.id=s.id;
+SELECT setval('public.order_number_seq',coalesce((SELECT max(order_number) FROM sales),0)+1,false);
+ALTER TABLE sales ALTER COLUMN order_number SET DEFAULT nextval('public.order_number_seq'),ALTER COLUMN order_number SET NOT NULL;
+ALTER SEQUENCE public.order_number_seq OWNED BY sales.order_number;
+CREATE UNIQUE INDEX sales_order_number_idx ON sales(order_number);
+CREATE INDEX IF NOT EXISTS sales_cashier_created_idx ON sales(cashier_id,created_at DESC);
+UPDATE storage.buckets SET file_size_limit=1048576 WHERE id='product-images';
+COMMIT;

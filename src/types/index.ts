@@ -23,12 +23,20 @@ export type ProductInput = Pick<
   "name" | "description" | "price" | "category" | "image" | "available"
 >;
 export type SaleItem = {
+  id?: string;
+  sale_id?: string;
   product_id: string;
   product_name: string;
   quantity: number;
   unit_price: number;
 };
 export type Sale = {
+  request_id?: string;
+  shift_id?: string | null;
+  voided_at?: string | null;
+  voided_by?: string | null;
+  qr_version?: string | null;
+  order_number: number;
   id: string;
   created_at: string;
   cashier_id: string;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ReceiptText,
+  Download,
   Wallet,
   ScanLine,
   ArrowUpRight,
@@ -10,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import { DateFilter } from "../../components/DateFilter";
 import { Loading, ErrorState, Empty } from "../../components/States";
 import {
@@ -17,10 +19,24 @@ import {
   getCollectionTotals,
   type CollectionTotals,
 } from "../../services/sales";
-import { day, stamp, money, errorMessage } from "../../lib/format";
+import { day, stamp, orderCode, money, errorMessage } from "../../lib/format";
 import { Receipt } from "./Receipt";
 import type { Sale } from "../../types";
 export function SalesHistory() {
+  const { profile } = useAuth();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+  const isAdmin = profile?.role === "admin";
+  const [today, setToday] = useState(day(new Date()));
+  useEffect(() => {
+    const update = () => setToday(day(new Date()));
+    const timer = setInterval(update, 15000);
+    window.addEventListener("focus", update);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", update);
+    };
+  }, []);
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
   const [totals, setTotals] = useState<CollectionTotals | null>(null);
@@ -54,8 +70,19 @@ export function SalesHistory() {
 
     setUpdating(true);
     Promise.all([
-      getSales(dates.from, dates.to, page, method, status),
-      getCollectionTotals(dates.from, dates.to, method, status),
+      getSales(
+        isAdmin ? dates.from : today,
+        isAdmin ? dates.to : today,
+        page,
+        method,
+        status,
+      ),
+      getCollectionTotals(
+        isAdmin ? dates.from : today,
+        isAdmin ? dates.to : today,
+        method,
+        status,
+      ),
     ])
       .then(([r, t]) => {
         if (active) {
@@ -77,7 +104,25 @@ export function SalesHistory() {
     return () => {
       active = false;
     };
-  }, [dates, page, revision, method, status]);
+  }, [dates, page, revision, method, status, isAdmin, today]);
+  async function exportExcel() {
+    if (!isAdmin || exporting) return;
+    setExporting(true);
+    setExportError("");
+    const filters = { ...dates, method, status };
+    try {
+      const [{ getSalesForExport }, { downloadSalesWorkbook }] =
+        await Promise.all([
+          import("../../services/salesExport"),
+          import("./exportWorkbook"),
+        ]);
+      await downloadSalesWorkbook(await getSalesForExport(filters), filters);
+    } catch (e) {
+      setExportError(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  }
   return (
     <>
       <div className="page-heading">
@@ -89,14 +134,38 @@ export function SalesHistory() {
             revisa ventas anuladas.
           </p>
         </div>
+        {isAdmin && (
+          <button
+            className="export-excel-button"
+            disabled={
+              exporting || !dates.from || !dates.to || dates.from > dates.to
+            }
+            onClick={exportExcel}
+          >
+            <Download size={18} />
+            {exporting ? "Preparando Excel…" : "Exportar a Excel"}
+          </button>
+        )}
       </div>
-      <DateFilter
-        {...dates}
-        onChange={(from, to) => {
-          setDates({ from, to });
-          setPage(0);
-        }}
-      />
+      {exportError && (
+        <p className="error" role="alert">
+          {exportError}
+        </p>
+      )}
+      {isAdmin ? (
+        <DateFilter
+          {...dates}
+          onChange={(from, to) => {
+            setDates({ from, to });
+            setPage(0);
+          }}
+        />
+      ) : (
+        <p className="today-only">
+          Tus ventas de hoy · {today.split("-").reverse().join("/")} · Horario
+          de Bolivia
+        </p>
+      )}
       <div className="management-filters">
         <label>
           Forma de pago
@@ -190,7 +259,7 @@ export function SalesHistory() {
                   </span>
                   <div>
                     <span className="ledger-label">PEDIDO</span>
-                    <h3>#{s.id.slice(0, 8).toUpperCase()}</h3>
+                    <h3>{orderCode(s)}</h3>
                     <time dateTime={s.created_at}>{stamp(s.created_at)}</time>
                   </div>
                 </div>
@@ -242,7 +311,7 @@ export function SalesHistory() {
                   <strong>{money(s.total)}</strong>
                   <button
                     className="ledger-detail"
-                    aria-label={`Ver detalle del pedido ${s.id.slice(0, 8)}`}
+                    aria-label={`Ver detalle del pedido ${orderCode(s)}`}
                     onClick={() => setSelected(s)}
                   >
                     Ver detalle <ArrowUpRight size={16} />

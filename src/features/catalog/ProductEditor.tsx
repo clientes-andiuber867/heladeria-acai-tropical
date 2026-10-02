@@ -146,15 +146,15 @@ export function ProductEditor({
           <img src={preview} alt="Vista previa" />
           <span>
             <Upload size={20} /> Fotografía del producto
-            <small>JPG, PNG o WebP · Hasta 5 MB</small>
+            <small>JPG, PNG o WebP · Hasta 10 MB · Se comprime antes de subir</small>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
-                if (f.size > 5 * 1024 * 1024) {
-                  setError("La foto debe pesar menos de 5 MB.");
+                if (f.size > 10 * 1024 * 1024) {
+                  setError("La foto debe pesar como máximo 10 MB.");
                   return;
                 }
                 setFile(f);

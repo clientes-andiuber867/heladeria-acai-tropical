@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { ProductCatalog } from "../catalog/ProductCatalog";
 import { PaymentQRDisplay } from "../payments/PaymentQRDisplay";
+import { CashRegister } from "../cash/CashRegister";
 import { Receipt } from "./Receipt";
 import { useAuth } from "../../context/AuthContext";
 import { useCatalog } from "../../context/CatalogContext";
@@ -28,6 +29,7 @@ export function SalesPage() {
     error: paymentError,
     refresh: refreshPayments,
   } = usePayments();
+  const [cashReady, setCashReady] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [mobileTab, setMobileTab] = useState<"catalog" | "cart">("catalog");
   const { profile } = useAuth();
@@ -68,7 +70,7 @@ export function SalesPage() {
   }, [total, method, cashPart, settings?.version]);
   const locked = busy || !!pending;
   function add(p: Product) {
-    if (locked) return;
+    if (locked || !cashReady) return;
     setItems((current) => {
       const exists = current.find((i) => i.product.id === p.id);
       if (exists)
@@ -94,6 +96,10 @@ export function SalesPage() {
   async function checkout() {
     if (submitting.current) return;
     if (!pending) {
+      if (!cashReady) {
+        toast("Abre caja antes de registrar ventas.", true);
+        return;
+      }
       if (!items.length) return;
       if (
         items.some(
@@ -201,6 +207,11 @@ export function SalesPage() {
         </div>
         <span className="live-badge">Caja · {profile?.display_name}</span>
       </div>
+      <CashRegister
+        onReady={setCashReady}
+        blocked={busy || !!pending || items.length > 0}
+        revision={receipt?.id || ""}
+      />
       <div className="pos-mobile-nav">
         <button
           type="button"
@@ -222,16 +233,18 @@ export function SalesPage() {
               {items.reduce((n, i) => n + i.quantity, 0)}
             </span>
           )}
-          {total > 0 && (
-            <span className="pos-tab-price">{money(total)}</span>
-          )}
+          {total > 0 && <span className="pos-tab-price">{money(total)}</span>}
         </button>
       </div>
       <div className="pos">
-        <section className={`pos-catalog ${mobileTab !== "catalog" ? "pos-mobile-hidden" : ""}`}>
-          <ProductCatalog onAdd={locked ? undefined : add} />
+        <section
+          className={`pos-catalog ${mobileTab !== "catalog" ? "pos-mobile-hidden" : ""}`}
+        >
+          <ProductCatalog onAdd={locked || !cashReady ? undefined : add} />
         </section>
-        <aside className={`cart panel ${mobileTab !== "cart" ? "pos-mobile-hidden" : ""}`}>
+        <aside
+          className={`cart panel ${mobileTab !== "cart" ? "pos-mobile-hidden" : ""}`}
+        >
           <button
             type="button"
             className="mobile-back-catalog text-button"
@@ -249,7 +262,7 @@ export function SalesPage() {
             <div className="cart-items">
               {items.map(({ product: p, quantity }) => (
                 <div className="cart-item" key={p.id}>
-                  <img src={p.image || "/logo.png"} alt="" />
+                  <img src={p.image || "/logo.png"} alt="" loading="lazy" decoding="async" />
                   <div>
                     <strong>{p.name}</strong>
                     <small>{money(p.price)}</small>
@@ -442,6 +455,7 @@ export function SalesPage() {
           <button
             className="primary full"
             disabled={
+              (!pending && !cashReady) ||
               !items.length ||
               busy ||
               (!pending &&

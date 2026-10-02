@@ -1,3 +1,4 @@
+import { optimizeProductImage } from "../lib/images";
 import { supabase } from "../lib/supabase";
 import { generateUUID } from "../lib/uuid";
 import type { Product, ProductInput } from "../types";
@@ -42,20 +43,15 @@ export async function setProductState(
   return data;
 }
 export async function uploadProductImage(file: File) {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
-    throw new Error("Usa una imagen JPG, PNG o WebP.");
-  if (file.size > 5 * 1024 * 1024)
-    throw new Error("La imagen debe pesar menos de 5 MB.");
-  const ext =
-    file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : "jpg";
+  const optimized = await optimizeProductImage(file);
+  const ext = optimized.type === "image/webp" ? "webp" : "png";
   const path = `products/${generateUUID()}.${ext}`;
   const { error } = await supabase.storage
     .from("product-images")
-    .upload(path, file, { cacheControl: "3600", contentType: file.type });
+    .upload(path, optimized, {
+      cacheControl: "31536000",
+      contentType: optimized.type,
+    });
   if (error) throw error;
   return {
     path,

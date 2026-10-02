@@ -68,3 +68,23 @@ La recuperación por correo requiere configurar SMTP para envío fiable a usuari
 Pruebas públicas con Playwright. Las pruebas de integración requieren cuentas QA temporales y un archivo de credenciales en la carpeta temporal del sistema; no están dentro del repositorio. El script `scripts/verify-live.mjs` comprueba RLS, transacciones, idempotencia, archivos y permisos de usuarios. Ejecutar scripts administrativos solo en un entorno autorizado y con credenciales de corta duración; no son parte del frontend ni se ejecutan en Vercel.
 
 El logo `public/logo.png` proviene del archivo proporcionado por el negocio. Tipografías Outfit y DM Sans.
+
+## Pedidos, imágenes y consumo
+
+Los pedidos usan una secuencia de PostgreSQL y se muestran como AT-000001. Los pedidos existentes conservan su UUID y reciben un número según su fecha; los siguientes números se asignan en el servidor. La secuencia no se reinicia ni reutiliza números y puede tener saltos por transacciones canceladas.
+
+Las fotos nuevas del catálogo admiten originales JPG/PNG/WebP de hasta 10 MB. El navegador elimina metadatos al recodificar, mantiene proporciones y reduce a un máximo de 1280 píxeles y 300 KB antes de subir. El bucket limita archivos a 1 MB. Las imágenes anteriores se conservan; los QR bancarios no pasan por compresión con pérdida. Los archivos tienen nombres únicos y caché de un año.
+
+Los apartados permitidos se preparan una vez en segundo plano tras entrar y permanecen montados para cambiar de pantalla sin descartar datos ni formularios. Catálogo y pagos reciben cambios mediante Realtime y al recuperar el foco; ya no consultan cada 30 segundos. La configuración de pagos comparte un proveedor. Caja escucha cambios de sus ventas y aperturas/cierres. Los temporizadores de cambio de día son locales y no hacen consultas periódicas.
+
+El botón Imprimir crea un documento independiente con el comprobante, fecha/hora original de emisión en Bolivia y detalle de precios. La impresión A4 excluye navegación y contenido de fondo. Una venta extensa puede necesitar varias páginas; no se fuerza una hoja adicional. Sigue siendo comprobante interno, no factura fiscal.
+
+La cajera consulta solamente ventas propias del día de Bolivia, protegido también por RLS. La apertura y cierre de caja guardan fondo, efectivo esperado, contado y diferencia. La sesión no se persiste: recargar o abrir de nuevo requiere iniciar sesión; esto no cierra una caja abierta.
+
+Auditoría incluye la pestaña «Aperturas y cierres de caja», con filtro de servidor por esos dos eventos, período, búsqueda y paginación.
+
+## Exportación del historial
+
+El administrador puede exportar a Excel desde Historial de ventas. Respeta el período, forma de pago y estado seleccionados, independientemente de la página visible. Consulta por lotes de 500 pedidos ordenados por número; excluye nuevas ventas posteriores al inicio de la consulta. Los cambios de estado durante la exportación pueden reflejarse según el momento de lectura de cada lote.
+
+La plantilla incluye logo y hojas Resumen, Ventas y Detalle de productos, con fechas/horas de Bolivia, moneda, filtros y encabezados inmovilizados. Las ventas anuladas se conservan en el detalle pero no cuentan como ingresos. Los totales del pedido no se repiten por producto. La librería de Excel se carga únicamente al solicitar la descarga y el archivo se genera en el navegador, sin guardarlo en Storage ni usar funciones de Vercel.

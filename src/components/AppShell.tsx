@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Loading } from "./States";
 import {
   LayoutDashboard,
@@ -54,7 +54,12 @@ const nav = [
   { id: "dashboard", name: "Resumen", icon: LayoutDashboard, admin: true },
   { id: "sales", name: "Punto de venta", icon: ShoppingBag, admin: false },
   { id: "history", name: "Historial de ventas", icon: History, admin: false },
-  { id: "products", name: "Mis productos", icon: UtensilsCrossed, admin: false },
+  {
+    id: "products",
+    name: "Mis productos",
+    icon: UtensilsCrossed,
+    admin: false,
+  },
   { id: "qr", name: "Carta y QR", icon: ScanLine, admin: true },
   { id: "audit", name: "Auditoría", icon: ClipboardList, admin: true },
   { id: "team", name: "Usuarios y roles", icon: Users, admin: true },
@@ -67,9 +72,27 @@ export function AppShell() {
       profile?.role === "admin" ? "dashboard" : "sales",
     ),
     [mobile, setMobile] = useState(false);
+  const [visited, setVisited] = useState<Set<string>>(
+    () => new Set([profile?.role === "admin" ? "dashboard" : "sales"]),
+  );
   const allowed = nav.filter((n) => !n.admin || profile?.role === "admin");
+  // Warm each permitted screen once, after the first paint. Mounted screens
+  // retain their data and forms; navigating only changes their visibility.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setVisited(
+        new Set(
+          nav
+            .filter((n) => !n.admin || profile?.role === "admin")
+            .map((n) => n.id),
+        ),
+      );
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [profile?.role]);
   const current = allowed.find((n) => n.id === page) ? page : "sales";
   function navigate(id: string) {
+    setVisited((previous) => new Set([...previous, id]));
     setPage(id);
     window.dispatchEvent(new CustomEvent("section-active", { detail: id }));
     setMobile(false);
@@ -173,25 +196,27 @@ export function AppShell() {
           </div>
         </header>
         <main className="content">
-          {allowed.map(({ id }) => (
-            <div key={id} hidden={current !== id}>
-              <Suspense fallback={<Loading />}>
-                {id === "dashboard" && (
-                  <DashboardPage
-                    onSell={() => navigate("sales")}
-                    onHistory={() => navigate("history")}
-                  />
-                )}
-                {id === "sales" && <SalesPage />}
-                {id === "history" && <SalesHistory />}
-                {id === "products" && <ProductsPage />}
-                {id === "qr" && <QRPage />}
-                {id === "audit" && <AuditPage />}
-                {id === "team" && <TeamPage />}
-                {id === "payments" && <PaymentSettingsPage />}
-              </Suspense>
-            </div>
-          ))}
+          {allowed
+            .filter((n) => visited.has(n.id) || n.id === current)
+            .map(({ id }) => (
+              <div key={id} hidden={current !== id}>
+                <Suspense fallback={<Loading />}>
+                  {id === "dashboard" && (
+                    <DashboardPage
+                      onSell={() => navigate("sales")}
+                      onHistory={() => navigate("history")}
+                    />
+                  )}
+                  {id === "sales" && <SalesPage />}
+                  {id === "history" && <SalesHistory />}
+                  {id === "products" && <ProductsPage />}
+                  {id === "qr" && <QRPage />}
+                  {id === "audit" && <AuditPage />}
+                  {id === "team" && <TeamPage />}
+                  {id === "payments" && <PaymentSettingsPage />}
+                </Suspense>
+              </div>
+            ))}
         </main>
       </div>
     </div>

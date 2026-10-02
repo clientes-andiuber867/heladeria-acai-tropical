@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  createElement,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "../lib/supabase";
 import { errorMessage } from "../lib/format";
 import { generateUUID } from "../lib/uuid";
@@ -9,7 +17,7 @@ export type PaymentSettings = {
 };
 export const qrUrl = (path: string) =>
   supabase.storage.from("payment-qr").getPublicUrl(path).data.publicUrl;
-export function usePayments() {
+function usePaymentState() {
   const [settings, setSettings] = useState<PaymentSettings | null>(null),
     [error, setError] = useState("");
   const refresh = useCallback(async () => {
@@ -32,16 +40,27 @@ export function usePayments() {
       )
       .subscribe();
     window.addEventListener("focus", refresh);
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 30000);
     return () => {
       void supabase.removeChannel(channel);
       window.removeEventListener("focus", refresh);
-      clearInterval(interval);
     };
   }, [refresh]);
   return { settings, error, refresh };
+}
+const PaymentContext = createContext<ReturnType<typeof usePaymentState> | null>(
+  null,
+);
+export function PaymentsProvider({ children }: { children: ReactNode }) {
+  return createElement(
+    PaymentContext.Provider,
+    { value: usePaymentState() },
+    children,
+  );
+}
+export function usePayments() {
+  const context = useContext(PaymentContext);
+  if (!context) throw new Error("Falta el proveedor de pagos.");
+  return context;
 }
 export async function savePaymentQR(
   file: File | null,

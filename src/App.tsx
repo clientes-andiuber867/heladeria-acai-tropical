@@ -1,3 +1,4 @@
+import { PaymentsProvider } from "./services/payments";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { CatalogProvider } from "./context/CatalogContext";
@@ -71,7 +72,9 @@ function AuthenticatedApp() {
     return <PasswordSetup />;
   return (
     <CatalogProvider>
-      <AppShell />
+      <PaymentsProvider>
+        <AppShell />
+      </PaymentsProvider>
     </CatalogProvider>
   );
 }

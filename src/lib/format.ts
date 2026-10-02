@@ -60,3 +60,6 @@ export function periodDates(period: string) {
   }
   return { from: today.slice(0, 7) + "-01", to: today };
 }
+
+export const orderCode = (sale: { order_number: number }) =>
+  `AT-${String(sale.order_number).padStart(6, "0")}`;

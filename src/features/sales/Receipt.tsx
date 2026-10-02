@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Check, Printer, Ban } from "lucide-react";
+import { useState, useRef } from "react";
+import { Printer, Ban } from "lucide-react";
 import { Modal } from "../../components/Modal";
-import { Brand } from "../../components/Brand";
-import { money, stamp, errorMessage } from "../../lib/format";
+import { printReceipt } from "../../lib/printReceipt";
+import "./receipt.css";
+import { orderCode, money, errorMessage } from "../../lib/format";
 import { voidSale } from "../../services/sales";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -18,6 +19,19 @@ export function Receipt({
 }) {
   const { profile } = useAuth();
   const toast = useToast();
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [printing, setPrinting] = useState(false);
+  const issued = new Date(sale.created_at);
+  async function print() {
+    setPrinting(true);
+    try {
+      await printReceipt(receiptRef.current!);
+    } catch (e) {
+      toast(errorMessage(e));
+    } finally {
+      setPrinting(false);
+    }
+  }
   const [reason, setReason] = useState(""),
     [voiding, setVoiding] = useState(false),
     [busy, setBusy] = useState(false),
@@ -35,52 +49,127 @@ export function Receipt({
     }
   }
   return (
-    <Modal title="Detalle de venta" onClose={onClose} busy={busy}>
-      <div className="receipt printable">
-        <Brand />
-        <span className="success-icon">
-          <Check size={28} />
-        </span>
-        <h2>
-          {sale.status === "voided" ? "Venta anulada" : "Venta registrada"}
-        </h2>
-        <p>Pedido #{sale.id.slice(0, 8).toUpperCase()}</p>
-        <p>
-          {stamp(sale.created_at)} · {sale.cashier_name}
-        </p>
-        {sale.sale_items.map((i, n) => (
-          <div className="receipt-row" key={n}>
-            <span>
-              {i.quantity} × {i.product_name}
-            </span>
-            <strong>{money(i.quantity * i.unit_price)}</strong>
+    <Modal
+      title="Detalle de venta"
+      onClose={onClose}
+      busy={busy}
+      className="receipt-dialog"
+    >
+      <div className="sale-document" ref={receiptRef}>
+        <header className="document-header">
+          <div className="document-brand">
+            <img src="/logo.png" alt="Açaí Tropical" />
+            <div>
+              <strong>Açaí Tropical</strong>
+              <span>Comprobante de venta</span>
+            </div>
           </div>
-        ))}
-        <div className="order-total">
-          <span>Total · {sale.payment_method}</span>
-          <strong>{money(sale.total)}</strong>
+          <div className="document-number">
+            <strong>{orderCode(sale)}</strong>
+            <span>{sale.status === "voided" ? "ANULADO" : "PAGADO"}</span>
+          </div>
+        </header>
+        <div className="document-meta">
+          <div>
+            <span>Fecha de emisión</span>
+            <strong>
+              {issued.toLocaleDateString("es-BO", {
+                timeZone: "America/La_Paz",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </strong>
+          </div>
+          <div>
+            <span>Hora de emisión · Bolivia</span>
+            <strong>
+              {issued.toLocaleTimeString("es-BO", {
+                timeZone: "America/La_Paz",
+                hourCycle: "h23",
+              })}
+            </strong>
+          </div>
+          <div>
+            <span>Atendido por</span>
+            <strong>{sale.cashier_name}</strong>
+          </div>
+          <div>
+            <span>Forma de pago</span>
+            <strong>{sale.payment_method}</strong>
+          </div>
         </div>
-        <p>
-          Efectivo: {money(sale.cash_amount)} · QR: {money(sale.qr_amount)}
-        </p>
-        {sale.qr_recipient && <p>Destino QR: {sale.qr_recipient}</p>}
-        {sale.cash_amount > 0 && (
-          <p>
-            Recibido: {money(sale.cash_received || 0)} · Cambio:{" "}
-            {money((sale.cash_received || 0) - sale.cash_amount)}
+        <table className="document-items">
+          <thead>
+            <tr>
+              <th>Cant.</th>
+              <th>Descripción</th>
+              <th>Precio</th>
+              <th>Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sale.sale_items.map((i, n) => (
+              <tr key={n}>
+                <td>{i.quantity}</td>
+                <td>{i.product_name}</td>
+                <td>{money(i.unit_price)}</td>
+                <td>{money(i.quantity * i.unit_price)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="document-summary">
+          <div>
+            <span>Efectivo aplicado</span>
+            <strong>{money(sale.cash_amount)}</strong>
+          </div>
+          <div>
+            <span>Pago por QR</span>
+            <strong>{money(sale.qr_amount)}</strong>
+          </div>
+          <div className="document-total">
+            <span>Total de la venta</span>
+            <strong>{money(sale.total)}</strong>
+          </div>
+          {sale.cash_amount > 0 && (
+            <>
+              <div>
+                <span>Efectivo recibido</span>
+                <strong>{money(sale.cash_received || 0)}</strong>
+              </div>
+              <div>
+                <span>Cambio entregado</span>
+                <strong>
+                  {money((sale.cash_received || 0) - sale.cash_amount)}
+                </strong>
+              </div>
+            </>
+          )}
+        </div>
+        {sale.qr_recipient && (
+          <p className="document-note">
+            <b>Titular QR:</b> {sale.qr_recipient}
           </p>
         )}
-        {sale.note && <p>Nota: {sale.note}</p>}
-        {sale.void_reason && (
-          <p className="error">Motivo de anulación: {sale.void_reason}</p>
+        {sale.note && (
+          <p className="document-note">
+            <b>Observación:</b> {sale.note}
+          </p>
         )}
-        <p className="fine-print">
-          Comprobante interno · No válido como factura fiscal
-        </p>
+        {sale.void_reason && (
+          <p className="document-note">
+            <b>Motivo de anulación:</b> {sale.void_reason}
+          </p>
+        )}
+        <footer className="document-footer">
+          <strong>Gracias por tu visita</strong>
+          <span>Comprobante interno · No válido como factura fiscal</span>
+        </footer>
       </div>
       <div className="button-row no-print">
-        <button className="secondary" onClick={() => window.print()}>
-          <Printer size={16} /> Imprimir
+        <button className="secondary" onClick={print} disabled={printing}>
+          <Printer size={16} /> {printing ? "Preparando…" : "Imprimir"}
         </button>
         <button className="primary" onClick={onClose}>
           Continuar

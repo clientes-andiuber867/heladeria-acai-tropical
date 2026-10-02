@@ -62,16 +62,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         },
       )
       .subscribe();
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 30000);
     const focus = () => {
       void refresh();
     };
     window.addEventListener("focus", focus);
     return () => {
       void supabase.removeChannel(ch);
-      clearInterval(interval);
+
       window.removeEventListener("focus", focus);
     };
   }, [refresh]);

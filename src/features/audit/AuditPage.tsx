@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Search,
+  Wallet,
+  LockKeyhole,
   ShieldCheck,
   ReceiptText,
   Package,
@@ -22,6 +24,10 @@ import { day, stamp, money, errorMessage } from "../../lib/format";
 import type { AuditEvent } from "../../types";
 function summary(e: AuditEvent) {
   const d = e.detail;
+  if (e.action === "Caja abierta")
+    return `Fondo inicial: ${money(d.opening_cash)}`;
+  if (e.action === "Caja cerrada")
+    return `Esperado: ${money(d.expected_cash)} · Contado: ${money(d.counted_cash)} · Diferencia: ${money(d.difference)} · ${d.closing_note || "Sin observaciones"}`;
   if (e.action === "QR de cobro actualizado") return d.recipient;
   if (e.action.startsWith("Sección"))
     return d.name || d.before || "Sección de productos";
@@ -37,6 +43,8 @@ function summary(e: AuditEvent) {
 function activityStyle(action: string) {
   if (/anulada|eliminado|eliminada/i.test(action))
     return { tone: "rose", Icon: Ban };
+  if (action === "Caja abierta") return { tone: "green", Icon: Wallet };
+  if (action === "Caja cerrada") return { tone: "purple", Icon: LockKeyhole };
   if (action.startsWith("Venta")) return { tone: "green", Icon: ReceiptText };
   if (action.startsWith("Producto") || action.startsWith("Sección"))
     return { tone: "mango", Icon: Package };
@@ -72,21 +80,24 @@ export function AuditPage() {
   useEffect(() => {
     if (!dates.from || !dates.to || dates.from > dates.to) return;
     let active = true;
-    const timer = setTimeout(() => {
-      getAudit(dates.from, dates.to, search, page, scope)
-        .then((d) => {
-          if (active) {
-            setEvents(d);
-            setError("");
-          }
-        })
-        .catch((e) => {
-          if (active) setError(errorMessage(e));
-        })
-        .finally(() => {
-          if (active) setLoading(false);
-        });
-    }, 250);
+    const timer = setTimeout(
+      () => {
+        getAudit(dates.from, dates.to, search, page, scope)
+          .then((d) => {
+            if (active) {
+              setEvents(d);
+              setError("");
+            }
+          })
+          .catch((e) => {
+            if (active) setError(errorMessage(e));
+          })
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+      },
+      search ? 250 : 0,
+    );
     return () => {
       active = false;
       clearTimeout(timer);
@@ -100,8 +111,8 @@ export function AuditPage() {
           <span className="eyebrow">TRANSPARENCIA EN CADA DETALLE</span>
           <h1>Control y cambios del negocio</h1>
           <p className="muted">
-            Supervisa anulaciones, cambios de catálogo, accesos del personal y
-            el QR de cobro.
+            Supervisa aperturas y cierres de caja, anulaciones, catálogo,
+            accesos y el QR de cobro.
           </p>
         </div>
         <span className="live-badge">
@@ -118,6 +129,7 @@ export function AuditPage() {
       <div className="audit-scopes" aria-label="Tipo de actividad">
         {[
           ["changes", "Cambios y anulaciones"],
+          ["cash", "Aperturas y cierres de caja"],
           ["voids", "Anulaciones"],
           ["catalog", "Productos y secciones"],
           ["access", "Usuarios y accesos"],
@@ -140,7 +152,9 @@ export function AuditPage() {
       <p className="fine-print">
         {scope === "changes"
           ? "Esta vista prioriza cambios administrativos y anulaciones. Las ventas normales y los inicios de sesión siguen disponibles en Toda la actividad."
-          : "Consulta quién realizó cada acción y revisa su detalle. Los filtros se aplican a todos los registros del período."}
+          : scope === "cash"
+            ? "Controla quién abrió o cerró caja, a qué hora, el fondo inicial y las diferencias de efectivo. Usa el período y la búsqueda para revisar a cada responsable."
+            : "Consulta quién realizó cada acción y revisa su detalle. Los filtros se aplican a todos los registros del período."}
       </p>
       <div className="catalog-tools">
         <div className="search">
@@ -169,7 +183,11 @@ export function AuditPage() {
               </span>
               <div>
                 <span className="insight-kicker">TRAZABILIDAD DEL NEGOCIO</span>
-                <h2>Registro de actividad</h2>
+                <h2>
+                  {scope === "cash"
+                    ? "Aperturas y cierres de caja"
+                    : "Registro de actividad"}
+                </h2>
               </div>
             </div>
             <span className="activity-count">
