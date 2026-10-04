@@ -88,3 +88,7 @@ Auditoría incluye la pestaña «Aperturas y cierres de caja», con filtro de se
 El administrador puede exportar a Excel desde Historial de ventas. Respeta el período, forma de pago y estado seleccionados, independientemente de la página visible. Consulta por lotes de 500 pedidos ordenados por número; excluye nuevas ventas posteriores al inicio de la consulta. Los cambios de estado durante la exportación pueden reflejarse según el momento de lectura de cada lote.
 
 La plantilla incluye logo y hojas Resumen, Ventas y Detalle de productos, con fechas/horas de Bolivia, moneda, filtros y encabezados inmovilizados. Las ventas anuladas se conservan en el detalle pero no cuentan como ingresos. Los totales del pedido no se repiten por producto. La librería de Excel se carga únicamente al solicitar la descarga y el archivo se genera en el navegador, sin guardarlo en Storage ni usar funciones de Vercel.
+
+## Aplicación instalable
+
+El manifiesto web configura Açaí Tropical en modo standalone con iconos del negocio de 192/512 px, máscara segura y Apple Touch de 180 px. El botón Instalar aplicación usa el diálogo del navegador cuando está disponible y muestra instrucciones en otros casos. En producción se instala desde el dominio HTTPS de Vercel; una instalación de localhost depende del servidor local. No se almacenan ventas offline ni se cambia la persistencia de sesión.

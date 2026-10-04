@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Açaí Tropical",
+  "short_name": "Açaí Tropical",
+  "description": "Ventas y carta de Açaí Tropical",
+  "lang": "es-BO",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7f0",
+  "theme_color": "#542468",
+  "icons": [
+    { "src": "/icons/acai-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/acai-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/acai-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "prefer_related_applications": false
+}
