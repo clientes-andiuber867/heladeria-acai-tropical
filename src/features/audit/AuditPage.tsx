@@ -52,7 +52,7 @@ function activityStyle(action: string) {
   if (action === "Inicio de sesión") return { tone: "neutral", Icon: LogIn };
   return { tone: "purple", Icon: Users };
 }
-export function AuditPage() {
+export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
   const [scope, setScope] = useState("changes");
   const [dates, setDates] = useState({
       from: day(new Date()),
@@ -65,6 +65,13 @@ export function AuditPage() {
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0),
     [selected, setSelected] = useState<AuditEvent | null>(null);
+  useEffect(() => {
+    if (!cashRequest) return;
+    setScope("cash");
+    setSearch("");
+    setPage(0);
+    setSelected(null);
+  }, [cashRequest]);
   useEffect(() => {
     const refresh = (event: Event) => {
       if (event.type === "focus" || (event as CustomEvent).detail === "audit")

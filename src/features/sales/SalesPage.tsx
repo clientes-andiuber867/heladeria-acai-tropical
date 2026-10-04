@@ -23,7 +23,7 @@ import type { CartItem, Product, Sale } from "../../types";
 import { usePayments, qrUrl } from "../../services/payments";
 import { generateUUID } from "../../lib/uuid";
 type Pending = Parameters<typeof completeSale>[0];
-export function SalesPage() {
+export function SalesPage({ onAuditCash }: { onAuditCash: () => void }) {
   const {
     settings,
     error: paymentError,
@@ -208,6 +208,7 @@ export function SalesPage() {
         <span className="live-badge">Caja · {profile?.display_name}</span>
       </div>
       <CashRegister
+        onAuditCash={onAuditCash}
         onReady={setCashReady}
         blocked={busy || !!pending || items.length > 0}
         revision={receipt?.id || ""}
@@ -262,7 +263,12 @@ export function SalesPage() {
             <div className="cart-items">
               {items.map(({ product: p, quantity }) => (
                 <div className="cart-item" key={p.id}>
-                  <img src={p.image || "/logo.png"} alt="" loading="lazy" decoding="async" />
+                  <img
+                    src={p.image || "/logo.png"}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div>
                     <strong>{p.name}</strong>
                     <small>{money(p.price)}</small>

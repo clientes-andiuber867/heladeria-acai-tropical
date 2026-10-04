@@ -68,6 +68,7 @@ const nav = [
 export function AppShell() {
   const { profile, signOut } = useAuth();
   const toast = useToast();
+  const [cashAuditRequest, setCashAuditRequest] = useState(0);
   const [page, setPage] = useState(
       profile?.role === "admin" ? "dashboard" : "sales",
     ),
@@ -207,11 +208,20 @@ export function AppShell() {
                       onHistory={() => navigate("history")}
                     />
                   )}
-                  {id === "sales" && <SalesPage />}
+                  {id === "sales" && (
+                    <SalesPage
+                      onAuditCash={() => {
+                        setCashAuditRequest((n) => n + 1);
+                        navigate("audit");
+                      }}
+                    />
+                  )}
                   {id === "history" && <SalesHistory />}
                   {id === "products" && <ProductsPage />}
                   {id === "qr" && <QRPage />}
-                  {id === "audit" && <AuditPage />}
+                  {id === "audit" && (
+                    <AuditPage cashRequest={cashAuditRequest} />
+                  )}
                   {id === "team" && <TeamPage />}
                   {id === "payments" && <PaymentSettingsPage />}
                 </Suspense>

@@ -7,7 +7,6 @@ import {
   currentShift,
   openShift,
   closeShift,
-  recentShifts,
   type CashShift,
 } from "../../services/cash";
 import { supabase } from "../../lib/supabase";
@@ -15,10 +14,12 @@ export function CashRegister({
   onReady,
   blocked,
   revision,
+  onAuditCash,
 }: {
   onReady: (ready: boolean) => void;
   blocked: boolean;
   revision: string;
+  onAuditCash: () => void;
 }) {
   const { profile } = useAuth();
   const [shift, setShift] = useState<CashShift | null>(null),
@@ -28,10 +29,7 @@ export function CashRegister({
     [mode, setMode] = useState<"open" | "close" | null>(null),
     [amount, setAmount] = useState(""),
     [note, setNote] = useState(""),
-    [closed, setClosed] = useState<CashShift | null>(null),
-    [history, setHistory] = useState<Awaited<
-      ReturnType<typeof recentShifts>
-    > | null>(null);
+    [closed, setClosed] = useState<CashShift | null>(null);
   const refresh = useCallback(async () => {
     try {
       const s = await currentShift(profile!.id);
@@ -100,7 +98,6 @@ export function CashRegister({
       }
       await refresh();
       setMode(null);
-      setHistory(null);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -178,44 +175,9 @@ export function CashRegister({
         </p>
       )}
       {profile?.role === "admin" && (
-        <>
-          <button
-            className="text-button"
-            onClick={async () => {
-              try {
-                setHistory(history ? null : await recentShifts());
-              } catch (e) {
-                setError(errorMessage(e));
-              }
-            }}
-          >
-            {history ? "Ocultar cajas" : "Ver últimas 20 cajas del equipo"}
-          </button>
-          {history && (
-            <div className="cash-history">
-              {history.map((s) => (
-                <article key={s.id}>
-                  <strong>
-                    {s.profiles.display_name} ·{" "}
-                    {s.status === "open" ? "Abierta" : "Cerrada"}
-                  </strong>
-                  <small>
-                    {stamp(s.opened_at)}
-                    {s.closed_at ? ` → ${stamp(s.closed_at)}` : ""}
-                  </small>
-                  <p>
-                    Fondo: {money(s.opening_cash)}
-                    {s.status === "closed"
-                      ? ` · Esperado: ${money(s.expected_cash)} · Contado: ${money(s.counted_cash || 0)} · Diferencia: ${money(s.difference || 0)}`
-                      : ""}
-                  </p>
-                  {s.closing_note && <p>{s.closing_note}</p>}
-                </article>
-              ))}
-              {!history.length && <p>No hay cajas registradas.</p>}
-            </div>
-          )}
-        </>
+        <button className="text-button" onClick={onAuditCash}>
+          Ver aperturas y cierres de caja
+        </button>
       )}
       {mode && (
         <Modal
