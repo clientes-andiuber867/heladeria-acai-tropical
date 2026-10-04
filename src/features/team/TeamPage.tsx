@@ -206,7 +206,7 @@ function MemberEditor({
         {
           <>
             <label>
-              {member ? "Nueva contraseña (opcional)" : "Contraseña temporal"}
+              {member ? "Nueva contraseña (opcional)" : "Contraseña de acceso"}
               <input
                 type="password"
                 required={!member}
@@ -219,8 +219,8 @@ function MemberEditor({
             </label>
             <p className="fine-print">
               {member
-                ? "Deja la contraseña vacía para conservar la actual."
-                : "Entrega esta contraseña a la persona. Al ingresar deberá elegir una nueva."}{" "}
+                ? "Deja la contraseña vacía para conservar la actual. Si asignas una nueva, podrá usarla directamente sin cambiarla."
+                : "Esta será su contraseña de acceso. No se le pedirá cambiarla al ingresar."}{" "}
               No se envían correos automáticamente.
             </p>
           </>

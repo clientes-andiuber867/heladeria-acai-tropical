@@ -31,7 +31,7 @@ Deno.serve(async req=>{
    if(!/^\S+@\S+\.\S+$/.test(email)||email.length>254||(password&&(password.length<10||password.length>128)))return response({error:'Revisa el correo y la contraseña (mínimo 10 caracteres).'},400);
    const {error:updateError}=await admin.auth.admin.updateUserById(target.id,{email,email_confirm:true,...(password?{password}:{})});
    if(updateError)return response({error:'No se pudieron actualizar las credenciales. Revisa si el correo ya está en uso.'},400);
-   const {error:profileError}=await admin.from('profiles').update({email,...(password?{must_change_password:target.id!==user.id}:{})}).eq('id',target.id);
+   const {error:profileError}=await admin.from('profiles').update({email,...(password?{must_change_password:false}:{})}).eq('id',target.id);
    if(profileError)return response({error:'Credenciales actualizadas; falta sincronizar el perfil.'},500);
    await admin.from('audit_events').insert({actor_id:user.id,actor_name:caller.display_name,action:'Credenciales actualizadas',entity_id:target.id,detail:{name:target.display_name,email,password_changed:!!password}});
    return response({id:target.id});
@@ -42,7 +42,7 @@ Deno.serve(async req=>{
   if(name.length<2||name.length>80||!/^\S+@\S+\.\S+$/.test(email)||email.length>254||password.length<10||password.length>128||!['admin','cashier'].includes(body.role))return response({error:'Revisa nombre, correo, rol y contraseña (mínimo 10 caracteres).'},400);
   const {data:created,error}=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{display_name:name},app_metadata:{role:body.role}});
   if(error)return response({error:error.message.includes('already')?'Ya existe una cuenta con ese correo.':'No se pudo crear el usuario. Revisa el correo y la contraseña.'},400);
-  const {error:profileError}=await admin.from('profiles').update({display_name:name,email,role:body.role,active:true,must_change_password:true}).eq('id',created.user.id).select('id').single();
+  const {error:profileError}=await admin.from('profiles').update({display_name:name,email,role:body.role,active:true,must_change_password:false}).eq('id',created.user.id).select('id').single();
   if(profileError)return response({error:'La cuenta quedó inactiva porque no se pudo completar su perfil. Contacta al administrador.'},500);
   const {error:auditError}=await admin.from('audit_events').insert({actor_id:user.id,actor_name:caller.display_name,action:'Usuario creado',entity_id:created.user.id,detail:{name,email,role:body.role}});
   if(auditError)return response({error:'La cuenta fue creada, pero no se pudo registrar la auditoría. Revisa el equipo antes de reintentar.'},500);
