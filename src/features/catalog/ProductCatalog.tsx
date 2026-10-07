@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Pencil } from "lucide-react";
+import { Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { money } from "../../lib/format";
 import { useCatalog } from "../../context/CatalogContext";
 import { Loading, ErrorState, Empty } from "../../components/States";
@@ -8,10 +8,12 @@ export function ProductCatalog({
   onAdd,
   onEdit,
   onToggle,
+  onDelete,
   busyId,
 }: {
   onAdd?: (product: Product) => void;
   onEdit?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
   onToggle?: (product: Product) => void;
   busyId?: string;
 }) {
@@ -107,15 +109,28 @@ export function ProductCatalog({
                 {!p.available && (
                   <span className="out-label">Agotado por hoy</span>
                 )}
-                {onEdit && (
-                  <button
-                    className="edit-photo icon"
-                    aria-label={`Editar ${p.name}`}
-                    onClick={() => onEdit(p)}
-                  >
-                    <Pencil size={17} />
-                  </button>
-                )}
+                <div className="product-photo-actions">
+                  {onEdit && (
+                    <button
+                      className="icon"
+                      title="Editar producto"
+                      aria-label={`Editar ${p.name}`}
+                      onClick={() => onEdit(p)}
+                    >
+                      <Pencil size={17} />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      className="icon delete-icon"
+                      title="Eliminar producto"
+                      aria-label={`Eliminar ${p.name}`}
+                      onClick={() => onDelete(p)}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="product-info">
                 <h3>{p.name}</h3>

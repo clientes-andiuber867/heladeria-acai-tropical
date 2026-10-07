@@ -1,12 +1,12 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { Upload, Archive } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { errorMessage } from "../../lib/format";
 import {
   saveProduct,
   uploadProductImage,
   removeUploadedImage,
-  setProductState,
+  deleteProduct,
 } from "../../services/catalog";
 import { useCatalog } from "../../context/CatalogContext";
 import { useToast } from "../../context/ToastContext";
@@ -42,7 +42,7 @@ export function ProductEditor({
     [preview, setPreview] = useState(product?.image || "/logo.png"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [archiving, setArchiving] = useState(false);
+    [deleting, setDeleting] = useState(false);
   const toast = useToast();
   useEffect(() => {
     if (!file) return;
@@ -78,12 +78,12 @@ export function ProductEditor({
       setBusy(false);
     }
   }
-  async function archive() {
+  async function remove() {
     setBusy(true);
     try {
-      await setProductState(product!.id, { archived: true, available: false });
+      await deleteProduct(product!.id);
       await refresh();
-      toast("Producto archivado. Se conserva en las ventas anteriores.");
+      toast("Producto eliminado. Las ventas anteriores se conservan.");
       onClose();
     } catch (e) {
       setError(errorMessage(e));
@@ -182,7 +182,7 @@ export function ProductEditor({
       </form>
       {product && (
         <div className="archive-area">
-          {archiving ? (
+          {deleting ? (
             <>
               <p>
                 El producto dejará de aparecer en la carta. Las ventas
@@ -191,21 +191,21 @@ export function ProductEditor({
               <button
                 className="danger-button"
                 disabled={busy}
-                onClick={archive}
+                onClick={remove}
               >
-                Confirmar archivo
+                Eliminar definitivamente
               </button>
               <button
                 className="text-button"
                 disabled={busy}
-                onClick={() => setArchiving(false)}
+                onClick={() => setDeleting(false)}
               >
                 Cancelar
               </button>
             </>
           ) : (
-            <button className="text-button" onClick={() => setArchiving(true)}>
-              <Archive size={15} /> Archivar producto
+            <button className="text-button" onClick={() => setDeleting(true)}>
+              <Trash2 size={15} /> Eliminar producto
             </button>
           )}
         </div>

@@ -1574,3 +1574,51 @@ body {
 .install-app-button:focus-visible {outline:3px solid #b8d985;outline-offset:3px}
 @media(max-width:600px){.install-app-button{bottom:auto;top:8px;right:8px;padding:8px 10px;font-size:11px}}
 @media print{.install-app-button{display:none!important}}
+.product-photo-actions {
+  position: absolute; top: 12px; right: 12px; display: flex; gap: 7px;
+}
+.product-photo-actions .icon, .category-row-actions .icon {
+  width: 34px; height: 34px; background: #fff; border: 1px solid #e9e0ed;
+  border-radius: 9px; color: #542468; transition: background .16s, box-shadow .16s, transform .16s;
+}
+.product-photo-actions .icon:hover, .category-row-actions .icon:hover {
+  background: #f3edf7; box-shadow: 0 3px 10px #321b3e14; transform: translateY(-1px);
+}
+.product-photo-actions .delete-icon, .category-row-actions .delete-icon { color: #a33d53; }
+.product-photo-actions .delete-icon:hover, .category-row-actions .delete-icon:hover { background: #fbeef1; }
+.product-photo-actions .icon:focus-visible, .category-row-actions .icon:focus-visible { outline: 2px solid #83509b; outline-offset: 3px; }
+dialog.catalog-dialog { width: 560px; padding: 30px; border: 1px solid #e8dfeb; background: #fffdfa; }
+.catalog-dialog-heading { display: flex; gap: 14px; align-items: center; padding-right: 24px; }
+.catalog-dialog-symbol { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; background: #eee5f3; color: #633279; }
+.catalog-dialog .catalog-dialog-heading h2 { font-size: 24px; line-height: 1.2; margin: 7px 0 0; }
+.catalog-dialog .eyebrow { font-size: 9px; letter-spacing: 1.8px; }
+.catalog-dialog > p { font-size: 14px; line-height: 1.75; margin: 20px 0; color: #73647c; }
+.delete-product-preview { display: flex; gap: 14px; align-items: center; margin-top: 25px; padding: 12px; background: white; border: 1px solid #e8dfeb; border-radius: 13px; }
+.delete-product-preview img { width: 62px; height: 62px; object-fit: cover; border-radius: 9px; }
+.delete-product-preview strong { display: block; overflow-wrap: anywhere; font-size: 16px; }
+.delete-product-preview span { display: block; margin-top: 5px; color: #87728e; font-size: 12px; }
+.catalog-preservation-note { display: flex; gap: 10px; align-items: center; padding: 13px 15px; background: #f0f5e7; color: #4f683d; border-radius: 10px; font-size: 12px; line-height: 1.6; }
+.catalog-preservation-note svg { flex-shrink: 0; }
+.catalog-dialog-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e9e0e9; }
+.catalog-dialog .danger-button { font: inherit; font-size: 13px; font-weight: 600; margin: 0; gap: 8px; align-items: center; justify-content: center; border: 1px solid #a84058; border-radius: 10px; background: #a84058; transition: background .16s, box-shadow .16s; }
+.catalog-dialog .danger-button:hover:not(:disabled) { background: #90354b; box-shadow: 0 3px 12px #a8405826; }
+.category-list-caption { display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #897491; margin: 24px 0 10px; }
+.category-manager-dialog .section-list { border: 1px solid #e9e0eb; border-radius: 12px; background: white; max-height: 300px; overflow-y: auto; }
+.category-manager-dialog .section-row { padding: 11px 13px; gap: 12px; border-bottom: 1px solid #f0eaf2; }
+.category-manager-dialog .section-row:last-child { border-bottom: 0; }
+.category-manager-dialog .section-row.selected { background: #f5eff8; }
+.category-position { font-size: 11px; color: #a090a8; font-variant-numeric: tabular-nums; }
+.category-manager-dialog .section-row strong { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; font-weight: 600; }
+.category-row-actions { display: flex; gap: 7px; flex-shrink: 0; }
+.category-form-panel { padding: 18px; margin-top: 20px; background: #f5f0f8; border: 1px solid #e8deef; border-radius: 12px; }
+.category-form-panel label { margin-top: 0; }
+.category-form-panel h3 { margin-top: 0; }
+.category-form-panel p { font-size: 13px; line-height: 1.65; color: #73647c; }
+@media (max-width: 520px) {
+  dialog.catalog-dialog { padding: 24px 18px; }
+  .catalog-dialog .catalog-dialog-heading h2 { font-size: 21px; }
+  .catalog-dialog-footer > button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-photo-actions .icon, .category-row-actions .icon { transition: none; transform: none; }
+}

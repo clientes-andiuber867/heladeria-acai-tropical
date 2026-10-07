@@ -92,3 +92,11 @@ export async function deleteCategory(name: string, replacement: string) {
   });
   if (error) throw error;
 }
+
+export async function deleteProduct(id: string) {
+  const { error } = await supabase.rpc("delete_product", { p_id: id });
+  if (error) {
+    if (error.code === "PGRST202") throw new Error("Falta aplicar la migración de eliminación de productos en la base de datos.");
+    throw error;
+  }
+}

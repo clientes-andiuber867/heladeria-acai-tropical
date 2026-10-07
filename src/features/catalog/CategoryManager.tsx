@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Layers3, Pencil, Trash2, Plus } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { useCatalog } from "../../context/CatalogContext";
 import { saveCategory, deleteCategory } from "../../services/catalog";
@@ -32,19 +33,43 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
     void run(() => saveCategory(name, editing));
   }
   return (
-    <Modal title="Gestionar secciones" onClose={onClose} busy={busy}>
-      <span className="eyebrow">ORGANIZA TU CARTA</span>
-      <h2>Secciones de productos</h2>
+    <Modal
+      className="catalog-dialog category-manager-dialog"
+      title="Gestionar secciones"
+      onClose={onClose}
+      busy={busy}
+    >
+      <div className="catalog-dialog-heading">
+        <span className="catalog-dialog-symbol">
+          <Layers3 size={23} />
+        </span>
+        <div>
+          <span className="eyebrow">ORGANIZA TU CARTA</span>
+          <h2>Secciones de productos</h2>
+        </div>
+      </div>
       <p className="muted">
         Los cambios se reflejan en la carta y el punto de venta.
       </p>
+      <div className="category-list-caption">
+        <span>TU CATÁLOGO</span>
+        <span>{categories.length} secciones</span>
+      </div>
       <div className="section-list">
-        {categories.map((c) => (
-          <div key={c} className="section-row">
+        {categories.map((c, index) => (
+          <div
+            key={c}
+            className={`section-row ${editing === c || removing === c ? "selected" : ""}`}
+          >
+            <span className="category-position">
+              {String(index + 1).padStart(2, "0")}
+            </span>
             <strong>{c}</strong>
-            <div>
+            <div className="category-row-actions">
               <button
-                className="text-button"
+                className="icon"
+                aria-label={`Editar ${c}`}
+                title="Editar sección"
                 disabled={busy}
                 onClick={() => {
                   setEditing(c);
@@ -53,10 +78,12 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
                   setError("");
                 }}
               >
-                Editar {c}
+                <Pencil size={16} />
               </button>
               <button
-                className="text-button"
+                className="icon delete-icon"
+                aria-label={`Eliminar ${c}`}
+                title="Eliminar sección"
                 disabled={busy}
                 onClick={() => {
                   setRemoving(c);
@@ -64,14 +91,14 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
                   setError("");
                 }}
               >
-                Eliminar {c}
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
         ))}
       </div>
       {removing ? (
-        <div className="archive-area">
+        <div className="category-form-panel">
           <h3>Eliminar {removing}</h3>
           <p>
             Si contiene productos, elige dónde moverlos. Las ventas anteriores
@@ -109,18 +136,21 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       ) : (
-        <form onSubmit={submit}>
+        <form className="category-form-panel" onSubmit={submit}>
           <label>
             {editing ? "Nuevo nombre" : "Nueva sección"}
             <input
               required
               minLength={2}
               maxLength={50}
+              placeholder="Por ejemplo, jugos naturales"
+              disabled={busy}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </label>
           <button className="primary" disabled={busy}>
+            {!editing && <Plus size={17} />}
             {busy
               ? "Guardando…"
               : editing

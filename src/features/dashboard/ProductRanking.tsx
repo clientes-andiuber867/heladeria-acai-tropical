@@ -53,7 +53,7 @@ export function ProductRanking({
         {to.split("-").reverse().join("/")}. Ordenado por unidades vendidas.
       </p>
       <p className="fine-print">
-        Solo ventas completadas. Incluye productos sin ventas; los archivados
+        Solo ventas completadas. Incluye productos sin ventas; los archivados o eliminados
         aparecen si tuvieron ventas en este período.
       </p>
       {loading ? (

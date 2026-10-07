@@ -1118,3 +1118,6 @@ dialog.customer-qr-dialog[open] { display: grid; grid-template-columns: minmax(0
   .customer-qr-amount { font-size: 32px; }
   .customer-qr-details .primary { margin-top: 8px; }
 }
+
+.product-delete { color: #a52a45; }
+.archived-product-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid #e8dfee; }

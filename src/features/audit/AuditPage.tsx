@@ -34,6 +34,7 @@ function summary(e: AuditEvent) {
   if (e.action === "Venta registrada")
     return `${money(d.total)} · ${d.payment} · Efectivo: ${money(d.cash_amount ?? (d.payment === "Efectivo" ? d.total : 0))} · QR: ${money(d.qr_amount ?? (d.payment === "QR" ? d.total : 0))} · ${(d.items || []).map((i: any) => `${i.quantity} × ${i.product_name}`).join(", ")}`;
   if (e.action === "Venta anulada") return `${money(d.total)} · ${d.reason}`;
+  if (e.action === "Producto eliminado") return `${d.before?.name || "Producto"} · Eliminado del catálogo`;
   if (d.after)
     return `${d.after.name} · ${money(d.after.price)} · ${d.after.archived ? "Archivado" : d.after.available ? "Disponible" : "Agotado"}`;
   if (d.name)
