@@ -15,6 +15,7 @@ import {
   UserRound,
   ChevronLeft,
   ChevronRight,
+  Boxes,
 } from "lucide-react";
 import { DateFilter } from "../../components/DateFilter";
 import { Loading, Empty, ErrorState } from "../../components/States";
@@ -24,6 +25,8 @@ import { day, stamp, money, errorMessage } from "../../lib/format";
 import type { AuditEvent } from "../../types";
 function summary(e: AuditEvent) {
   const d = e.detail;
+  if (e.action.startsWith("Inventario:"))
+    return `${d.inventory_name}${d.after_quantity !== undefined ? ` · ${d.before_quantity} → ${d.after_quantity} ${d.unit}` : ""}${d.note ? ` · ${d.note}` : ""}`;
   if (e.action === "Caja abierta")
     return `Fondo inicial: ${money(d.opening_cash)}`;
   if (e.action === "Caja cerrada")
@@ -34,7 +37,8 @@ function summary(e: AuditEvent) {
   if (e.action === "Venta registrada")
     return `${money(d.total)} · ${d.payment} · Efectivo: ${money(d.cash_amount ?? (d.payment === "Efectivo" ? d.total : 0))} · QR: ${money(d.qr_amount ?? (d.payment === "QR" ? d.total : 0))} · ${(d.items || []).map((i: any) => `${i.quantity} × ${i.product_name}`).join(", ")}`;
   if (e.action === "Venta anulada") return `${money(d.total)} · ${d.reason}`;
-  if (e.action === "Producto eliminado") return `${d.before?.name || "Producto"} · Eliminado del catálogo`;
+  if (e.action === "Producto eliminado")
+    return `${d.before?.name || "Producto"} · Eliminado del catálogo`;
   if (d.after)
     return `${d.after.name} · ${money(d.after.price)} · ${d.after.archived ? "Archivado" : d.after.available ? "Disponible" : "Agotado"}`;
   if (d.name)
@@ -42,6 +46,7 @@ function summary(e: AuditEvent) {
   return "Acceso al sistema";
 }
 function activityStyle(action: string) {
+  if (action.startsWith("Inventario:")) return { tone: "green", Icon: Boxes };
   if (/anulada|eliminado|eliminada/i.test(action))
     return { tone: "rose", Icon: Ban };
   if (action === "Caja abierta") return { tone: "green", Icon: Wallet };
@@ -54,7 +59,7 @@ function activityStyle(action: string) {
   return { tone: "purple", Icon: Users };
 }
 export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
-  const [scope, setScope] = useState("changes");
+  const [scope, setScope] = useState("all");
   const [dates, setDates] = useState({
       from: day(new Date()),
       to: day(new Date()),
@@ -120,7 +125,7 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
           <h1>Control y cambios del negocio</h1>
           <p className="muted">
             Supervisa aperturas y cierres de caja, anulaciones, catálogo,
-            accesos y el QR de cobro.
+            inventario, accesos y el QR de cobro.
           </p>
         </div>
         <span className="live-badge">
@@ -136,19 +141,23 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
       />
       <div className="audit-scopes" aria-label="Tipo de actividad">
         {[
-          ["changes", "Cambios y anulaciones"],
+          ["all", "Toda la actividad"],
           ["cash", "Aperturas y cierres de caja"],
           ["voids", "Anulaciones"],
           ["catalog", "Productos y secciones"],
+          ["inventory", "Inventario"],
           ["access", "Usuarios y accesos"],
           ["payments", "QR de cobro"],
-          ["all", "Toda la actividad"],
         ].map(([value, label]) => (
           <button
             key={value}
             aria-pressed={scope === value}
             className={scope === value ? "active" : ""}
             onClick={() => {
+              if (scope === value) return;
+              setLoading(true);
+              setEvents([]);
+              setSelected(null);
               setScope(value);
               setPage(0);
             }}
@@ -158,8 +167,8 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
         ))}
       </div>
       <p className="fine-print">
-        {scope === "changes"
-          ? "Esta vista prioriza cambios administrativos y anulaciones. Las ventas normales y los inicios de sesión siguen disponibles en Toda la actividad."
+        {scope === "inventory"
+          ? "Artículos, grupos, entradas, salidas y conteos del inventario. Revisa quién hizo cada cambio, cuándo y qué cantidades se modificaron."
           : scope === "cash"
             ? "Controla quién abrió o cerró caja, a qué hora, el fondo inicial y las diferencias de efectivo. Usa el período y la búsqueda para revisar a cada responsable."
             : "Consulta quién realizó cada acción y revisa su detalle. Los filtros se aplican a todos los registros del período."}
@@ -194,7 +203,9 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
                 <h2>
                   {scope === "cash"
                     ? "Aperturas y cierres de caja"
-                    : "Registro de actividad"}
+                    : scope === "inventory"
+                      ? "Actividad del inventario"
+                      : "Registro de actividad"}
                 </h2>
               </div>
             </div>

@@ -5,7 +5,7 @@ export async function getAudit(
   to: string,
   search: string,
   page: number,
-  scope = "changes",
+  scope = "all",
 ): Promise<AuditEvent[]> {
   const { data, error } = await supabase.rpc("search_audit", {
     p_from: from,

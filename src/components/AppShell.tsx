@@ -13,6 +13,7 @@ import {
   Users,
   History,
   KeyRound,
+  Boxes,
 } from "lucide-react";
 import { Brand } from "./Brand";
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +27,11 @@ const DashboardPage = lazy(() =>
 const ProductsPage = lazy(() =>
   import("../features/catalog/ProductsPage").then((m) => ({
     default: m.ProductsPage,
+  })),
+);
+const InventoryPage = lazy(() =>
+  import("../features/inventory/InventoryPage").then((m) => ({
+    default: m.InventoryPage,
   })),
 );
 const SalesPage = lazy(() =>
@@ -61,6 +67,7 @@ const nav = [
     admin: false,
   },
   { id: "qr", name: "Carta y QR", icon: ScanLine, admin: true },
+  { id: "inventory", name: "Inventario", icon: Boxes, admin: true },
   { id: "audit", name: "Auditoría", icon: ClipboardList, admin: true },
   { id: "team", name: "Usuarios y roles", icon: Users, admin: true },
   { id: "payments", name: "Configurar pagos", icon: ScanLine, admin: true },
@@ -218,6 +225,9 @@ export function AppShell() {
                   )}
                   {id === "history" && <SalesHistory />}
                   {id === "products" && <ProductsPage />}
+                  {id === "inventory" && (
+                    <InventoryPage active={current === "inventory"} />
+                  )}
                   {id === "qr" && <QRPage />}
                   {id === "audit" && (
                     <AuditPage cashRequest={cashAuditRequest} />
