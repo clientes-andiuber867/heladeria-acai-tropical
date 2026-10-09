@@ -1,12 +1,12 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { Upload, Trash2 } from "lucide-react";
+import { Upload, Archive } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { errorMessage } from "../../lib/format";
 import {
   saveProduct,
   uploadProductImage,
   removeUploadedImage,
-  deleteProduct,
+  setProductState,
 } from "../../services/catalog";
 import { useCatalog } from "../../context/CatalogContext";
 import { useToast } from "../../context/ToastContext";
@@ -42,7 +42,7 @@ export function ProductEditor({
     [preview, setPreview] = useState(product?.image || "/logo.png"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [deleting, setDeleting] = useState(false);
+    [archiving, setArchiving] = useState(false);
   const toast = useToast();
   useEffect(() => {
     if (!file) return;
@@ -78,12 +78,14 @@ export function ProductEditor({
       setBusy(false);
     }
   }
-  async function remove() {
+  async function archive() {
+    if (busy || !product) return;
     setBusy(true);
+    setError("");
     try {
-      await deleteProduct(product!.id);
+      await setProductState(product.id, { archived: true, available: false });
       await refresh();
-      toast("Producto eliminado. Las ventas anteriores se conservan.");
+      toast("Producto archivado. Puedes recuperarlo en Productos archivados.");
       onClose();
     } catch (e) {
       setError(errorMessage(e));
@@ -182,30 +184,31 @@ export function ProductEditor({
       </form>
       {product && (
         <div className="archive-area">
-          {deleting ? (
+          {archiving ? (
             <>
               <p>
-                El producto dejará de aparecer en la carta. Las ventas
-                anteriores se conservan.
+                El producto dejará de aparecer en la carta y en el punto de
+                venta. Puedes recuperarlo desde Productos archivados. Las
+                ventas anteriores se conservan.
               </p>
               <button
-                className="danger-button"
+                className="secondary"
                 disabled={busy}
-                onClick={remove}
+                onClick={archive}
               >
-                Eliminar definitivamente
+                <Archive size={15} /> {busy ? "Archivando…" : "Confirmar archivo"}
               </button>
               <button
                 className="text-button"
                 disabled={busy}
-                onClick={() => setDeleting(false)}
+                onClick={() => setArchiving(false)}
               >
                 Cancelar
               </button>
             </>
           ) : (
-            <button className="text-button" onClick={() => setDeleting(true)}>
-              <Trash2 size={15} /> Eliminar producto
+            <button className="text-button" disabled={busy} onClick={() => setArchiving(true)}>
+              <Archive size={15} /> Archivar producto
             </button>
           )}
         </div>
