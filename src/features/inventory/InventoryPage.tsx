@@ -368,7 +368,7 @@ export function InventoryPage({ active }: { active: boolean }) {
             </div>
           ) : (
             <div className="inventory-table-scroll">
-              <table className="inventory-table">
+              <table className="inventory-table inventory-stock-table">
                 <thead>
                   <tr>
                     <th>Artículo / ubicación</th>
@@ -382,25 +382,25 @@ export function InventoryPage({ active }: { active: boolean }) {
                 <tbody>
                   {visible.map((i) => (
                     <tr key={i.id}>
-                      <td>
+                      <td data-label="Artículo / ubicación">
                         <strong>{i.name}</strong>
                         <small>{i.location || "Sin ubicación"}</small>
                         {i.note && (
                           <small className="inventory-note">{i.note}</small>
                         )}
                       </td>
-                      <td>{i.category}</td>
-                      <td>
+                      <td data-label="Grupo">{i.category}</td>
+                      <td data-label="Existencias">
                         <strong className="inventory-quantity">
                           {quantityLabel(i.quantity)}
                         </strong>
                         <small>{i.unit}</small>
                       </td>
-                      <td>
+                      <td data-label="Mínimo">
                         {quantityLabel(i.minimum)}
                         <small>{i.unit}</small>
                       </td>
-                      <td>
+                      <td data-label="Estado">
                         <span
                           className={`inventory-status ${Number(i.quantity) <= Number(i.minimum) ? "low" : "ok"}`}
                         >
@@ -411,7 +411,7 @@ export function InventoryPage({ active }: { active: boolean }) {
                               : "En orden"}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Acciones">
                         <div className="inventory-actions">
                           {!date && (
                             <>
@@ -491,30 +491,34 @@ export function InventoryPage({ active }: { active: boolean }) {
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id}>
-                      <td>
+                      <td data-label="Fecha / responsable">
                         {stamp(r.created_at)}
                         <small>{r.actor_name}</small>
                       </td>
-                      <td>
+                      <td data-label="Artículo">
                         <strong>{r.inventory_items.name}</strong>
                         <small>{r.inventory_items.unit}</small>
                       </td>
-                      <td>
+                      <td data-label="Movimiento">
                         <span
                           className={`inventory-status ${r.kind === "out" ? "low" : "ok"}`}
                         >
                           {movementLabels[r.kind]}
                         </span>
                       </td>
-                      <td>{quantityLabel(r.quantity_before)}</td>
-                      <td>
+                      <td data-label="Antes">
+                        {quantityLabel(r.quantity_before)}
+                      </td>
+                      <td data-label="Variación">
                         {r.delta > 0 ? "+" : ""}
                         {quantityLabel(r.delta)}
                       </td>
-                      <td>
+                      <td data-label="Después">
                         <strong>{quantityLabel(r.quantity_after)}</strong>
                       </td>
-                      <td className="inventory-note">{r.note}</td>
+                      <td data-label="Motivo" className="inventory-note">
+                        {r.note}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

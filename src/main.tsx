@@ -12,3 +12,4 @@ createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 import "./brand-theme.css";
+import "./responsive.css";

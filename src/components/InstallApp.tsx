@@ -57,9 +57,15 @@ export function InstallApp() {
   if (installed) return null;
   return (
     <>
-      <button className="install-app-button" onClick={install} disabled={busy}>
+      <button
+        className="install-app-button"
+        onClick={install}
+        disabled={busy}
+        aria-label={busy ? "Abriendo instalación" : "Instalar aplicación"}
+        title="Instalar aplicación"
+      >
         <Download size={17} />
-        {busy ? "Abriendo…" : "Instalar aplicación"}
+        <span>{busy ? "Abriendo…" : "Instalar aplicación"}</span>
       </button>
       {help && (
         <Modal title="Instalar Açaí Tropical" onClose={() => setHelp(false)}>

@@ -1,0 +1,286 @@
+/* Narrow-screen layout fixes. Desktop styling stays in the existing theme. */
+@media screen and (max-width: 1024px) {
+  .sidebar {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    height: 100dvh;
+  }
+  .sidebar > * {
+    flex-shrink: 0;
+  }
+  .install-app-button {
+    top: auto;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .install-app-button > span {
+    display: none;
+  }
+  .app-shell .content {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+  }
+  .public-menu footer {
+    padding-bottom: 80px;
+  }
+  .public-order-bar {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .order-live-notice {
+    bottom: calc(146px + env(safe-area-inset-bottom));
+  }
+  .pos-floating-bar {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .pos .product-grid {
+    padding-bottom: 155px;
+  }
+  dialog {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  dialog form,
+  dialog label,
+  .form-row > *,
+  .page-heading > *,
+  .panel {
+    min-width: 0;
+  }
+  dialog input,
+  dialog select,
+  dialog textarea {
+    max-width: 100%;
+  }
+  .inventory-page .inventory-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+@media screen and (max-width: 600px) {
+  .topbar > div {
+    min-width: 0;
+  }
+  .topbar > div:first-child {
+    flex: 1;
+  }
+  .topbar strong {
+    overflow-wrap: anywhere;
+  }
+  .topbar .mobile-toggle,
+  .topbar .avatar {
+    flex-shrink: 0;
+  }
+  .page-heading .live-badge {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+  .menu-logo-wrap {
+    right: 16px;
+    top: 32px;
+    width: 110px;
+    animation: none;
+    opacity: 0.2;
+  }
+  .logo-stage {
+    right: 14px;
+    bottom: 32px;
+    width: 100px;
+    height: 100px;
+    opacity: 0.3;
+  }
+  .logo-stage > img {
+    max-width: 100%;
+    animation: none;
+  }
+  .flavor-strip {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 18px;
+    white-space: normal;
+    text-align: center;
+  }
+  .flavor-strip > span:nth-child(even) {
+    display: none;
+  }
+  .flavor-strip > span:nth-child(odd) {
+    flex-basis: calc(50% - 18px);
+    font-size: 8px;
+  }
+  .public-menu .section-title {
+    align-items: flex-start;
+  }
+  .public-menu-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .public-menu-actions .muted {
+    font-size: 12px;
+  }
+  .public-menu .product-info {
+    padding: 12px;
+  }
+  .product-info h3,
+  .product-info p {
+    overflow-wrap: anywhere;
+  }
+  dialog input,
+  dialog select,
+  dialog textarea {
+    font-size: 16px;
+  }
+  .login-form {
+    padding-bottom: 80px;
+  }
+  .public-order-bar > span:nth-child(2) {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .public-order-bar {
+    padding: 13px 16px;
+    gap: 12px;
+  }
+}
+@media screen and (max-width: 1024px) {
+  .inventory-page .inventory-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .inventory-page .inventory-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .inventory-page .inventory-table tbody {
+    display: grid;
+    gap: 14px;
+    padding: 12px;
+  }
+  .inventory-page .inventory-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid #e8deed;
+    border-radius: 12px;
+    padding: 8px;
+  }
+  .inventory-page .inventory-table td {
+    display: block;
+    min-width: 0;
+    border: 0;
+    padding: 10px;
+    overflow-wrap: anywhere;
+  }
+  .inventory-page .inventory-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    color: #897093;
+    margin-bottom: 6px;
+  }
+  .inventory-page .inventory-table td:first-child,
+  .inventory-page .inventory-table td:last-child {
+    grid-column: 1 / -1;
+  }
+  .inventory-page .inventory-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+@media screen and (max-width: 360px) {
+  .public-menu .product-grid,
+  .pos .product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .public-menu .product-photo,
+  .pos .product-photo {
+    height: 190px;
+  }
+  .public-start-order {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .inventory-page .inventory-stock-table tbody {
+    gap: 10px;
+    padding: 10px;
+  }
+  .inventory-page .inventory-stock-table tr {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "name status" "group group" "stock minimum" "actions actions";
+    gap: 8px 12px;
+    padding: 14px;
+  }
+  .inventory-page .inventory-stock-table td {
+    padding: 0;
+    line-height: 1.35;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(1) {
+    grid-area: name;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(2) {
+    grid-area: group;
+    color: #897093;
+    font-size: 11px;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(3) {
+    grid-area: stock;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(4) {
+    grid-area: minimum;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(5) {
+    grid-area: status;
+    text-align: right;
+    align-self: start;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(6) {
+    grid-area: actions;
+    padding-top: 10px;
+    border-top: 1px solid #eee8f1;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(1)::before,
+  .inventory-page .inventory-stock-table td:nth-child(5)::before,
+  .inventory-page .inventory-stock-table td:nth-child(6)::before {
+    display: none;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(2)::before {
+    display: inline;
+    content: "Grupo: ";
+  }
+  .inventory-page .inventory-stock-table td::before {
+    margin-bottom: 3px;
+  }
+  .inventory-page .inventory-stock-table td:nth-child(3) small,
+  .inventory-page .inventory-stock-table td:nth-child(4) small {
+    display: inline;
+    margin-left: 5px;
+  }
+  .inventory-page .inventory-stock-table .inventory-quantity {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .inventory-page .inventory-stock-table .inventory-status {
+    white-space: normal;
+    font-size: 10px;
+    padding: 5px 7px;
+  }
+  .inventory-page .inventory-stock-table .inventory-note {
+    min-width: 0;
+  }
+  .inventory-page .inventory-stock-table .inventory-actions {
+    gap: 6px;
+  }
+  .inventory-page .inventory-stock-table .inventory-actions button {
+    min-height: 36px;
+  }
+}
