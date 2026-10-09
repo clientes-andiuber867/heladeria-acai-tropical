@@ -15,12 +15,7 @@ anónimo antes de desplegar; no publicar la funcionalidad con la migración pend
 
 ## Prueba local
 
-Mientras se renueva el token de Management API, Vite puede leer el QR vigente
-mediante `/api/local-public-payment` con `VITE_SUPABASE_URL` y
-`SUPABASE_SERVICE_ROLE_KEY` en `.env.local` (archivo ignorado por Git).
-La clave de servicio solo se usa en el servidor local y nunca debe tener el
-prefijo `VITE_`. La ruta está disponible exclusivamente en desarrollo y devuelve
-solo los tres campos públicos. No existe en la compilación para Vercel.
+La carta usa la misma función pública de Supabase en local y en Vercel. No necesita una clave de servicio en el navegador ni un endpoint local. La migración fue aplicada y verificada con acceso anónimo.
 
 Ejecutar `node scripts/verify-public-order.mjs` con Vite activo para comprobar
 selección, cantidades, QR, descarga, adaptación móvil y el enlace de WhatsApp.

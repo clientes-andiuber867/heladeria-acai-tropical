@@ -12,14 +12,6 @@ export const orderTotal = (lines: OrderLine[]) =>
   ) / 100;
 export async function getPublicPayment(): Promise<PaymentSettings | null> {
   const { data, error } = await supabase.rpc("public_payment_qr");
-  if (error && import.meta.env.DEV) {
-    const response = await fetch("/api/local-public-payment");
-    if (!response.ok)
-      throw new Error(
-        "No se pudo cargar el QR. Inténtalo nuevamente o solicítalo al negocio por WhatsApp.",
-      );
-    return response.json();
-  }
   if (error)
     throw new Error(
       "No se pudo cargar el QR. Inténtalo nuevamente o solicítalo al negocio por WhatsApp.",
