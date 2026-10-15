@@ -33,3 +33,17 @@ Estos resultados miden ese recorrido; no predicen un porcentaje exacto de ahorro
 - scripts/verify-branches-ui.mjs: aceptación en Supabase autorizado con identidad temporal y limpieza.
 - scripts/verify-efficiency-ui.mjs: conservación de formulario y descarga real de Excel comparada con datos de su sucursal; no crea ventas.
 - scripts/measure-resources.mjs: medición sobre preview local (5176 por defecto). Estos scripts de entorno autorizado usan la sesión administrativa temporal fuera del repositorio y no forman parte del frontend.
+
+## Corrección de respuestas vacías
+
+Se reprodujo en Chromium un error al reconstruir respuestas HTTP 204: el navegador puede exponer un stream vacío, pero el constructor Response rechaza cualquier cuerpo para ese estado. Afectaba la confirmación de guardados, aunque el servidor hubiera completado la operación.
+
+El transporte ahora conserva la respuesta nativa y solo clona lecturas compartidas. No reconstruye ni almacena en memoria el cuerpo completo de cada respuesta. Se mantiene la separación por sesión/sucursal y la invalidación al escribir.
+
+Regresión añadida:
+
+- `tests/transport.spec.ts`: las 13 llamadas de escritura que devuelven vacío, además de HTTP 204/205/304, JSON, errores y HEAD, mediante respuestas interceptadas en Chromium; sin modificar datos reales.
+- `npm run test:workflows`: 42 comprobaciones adicionales en PostgreSQL aislado: nombres con acento, productos, tres formas de pago, anulaciones, caja, reportes, inventario y personal, ejecutadas en ambas sucursales.
+- `scripts/verify-branches-ui.mjs`: guarda los valores actuales de sucursal desde escritorio y móvil contra Supabase y exige HTTP 204 y cierre del formulario sin error. No sustituye los nombres ni teléfonos elegidos por el negocio.
+
+Las 35 comprobaciones previas de aislamiento siguen vigentes. Las tres pruebas antiguas de integración de `npm test` requieren su propia configuración QA y se omiten si no está disponible; las verificaciones de interfaz actuales se ejecutan mediante los scripts indicados.

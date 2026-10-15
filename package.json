@@ -10,7 +10,8 @@
     "test": "playwright test",
     "test:branches": "node scripts/test-branches.mjs",
     "format": "prettier --write src tests vite.config.ts playwright.config.ts",
-    "test:requests": "node scripts/test-request-sharing.mjs"
+    "test:requests": "node scripts/test-request-sharing.mjs",
+    "test:workflows": "node scripts/test-workflows.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

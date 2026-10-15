@@ -50,6 +50,27 @@ page.on("dialog", async (d) => {
     await d.dismiss();
   }
 });
+async function verifyBranchSave() {
+  const id = await page.getByLabel("Sucursal activa").inputValue();
+  const [current] = await sql(
+    "SELECT name,order_phone FROM branches WHERE id='" + id + "'",
+    true,
+  );
+  await page
+    .getByRole("button", { name: "Editar sucursal", exact: true })
+    .click();
+  await page.getByLabel("Nombre de la sucursal").fill(current.name);
+  await page.getByLabel("WhatsApp de pedidos").fill(current.order_phone);
+  const response = page.waitForResponse((r) =>
+    r.url().endsWith("/rest/v1/rpc/update_branch"),
+  );
+  await page
+    .getByRole("button", { name: "Guardar sucursal", exact: true })
+    .click();
+  assert.equal((await response).status(), 204);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".topbar .live-badge")).toContainText(current.name);
+}
 try {
   // A generated link creates a session without sending an email or changing
   // anyone's password. The URL is never logged or stored in test artifacts.
@@ -62,8 +83,10 @@ try {
     page.getByRole("heading", { name: "Un vistazo a tu día" }),
   ).toBeVisible();
   await page.waitForLoadState("networkidle");
+  await verifyBranchSave();
   await page.getByLabel("Sucursal activa").selectOption(B2);
   await expect(page.getByLabel("Sucursal activa")).toHaveValue(B2);
+  await verifyBranchSave();
   await page.waitForLoadState("networkidle");
   await page
     .getByRole("button", { name: "Mis productos", exact: true })
@@ -142,6 +165,7 @@ try {
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Abrir navegación" }).click();
+  await verifyBranchSave();
   await page.screenshot({
     path: "test-results/branches-admin-mobile.png",
     fullPage: true,

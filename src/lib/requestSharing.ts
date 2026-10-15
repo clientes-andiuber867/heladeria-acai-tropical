@@ -45,13 +45,10 @@ export function createReadTransport(fetcher: typeof fetch) {
     if (!task) {
       task = (async () => {
         try {
-          const response = await fetcher(input, init);
-          if (!response.body) return response;
-          return new Response(await response.arrayBuffer(), {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-          });
+          // Preserve the native response, including bodyless HTTP statuses.
+          // Browsers may expose a stream for 204 even though constructing a
+          // Response with that status and any body (even zero bytes) is invalid.
+          return await fetcher(input, init);
         } finally {
           if (!read) pending.clear();
         }
@@ -64,6 +61,7 @@ export function createReadTransport(fetcher: typeof fetch) {
         void task.then(clear, clear);
       }
     }
-    return (await task).clone();
+    const response = await task;
+    return share ? response.clone() : response;
   };
 }
