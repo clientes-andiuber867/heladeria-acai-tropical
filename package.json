@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "playwright test",
-    "format": "prettier --write src tests vite.config.ts playwright.config.ts"
+    "test:branches": "node scripts/test-branches.mjs",
+    "format": "prettier --write src tests vite.config.ts playwright.config.ts",
+    "test:requests": "node scripts/test-request-sharing.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
@@ -19,6 +21,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@playwright/test": "^1.63.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.0",

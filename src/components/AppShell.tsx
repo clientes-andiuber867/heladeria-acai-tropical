@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
+import { SectionVisibility } from "../lib/visibility";
 import { Loading } from "./States";
 import {
   LayoutDashboard,
@@ -16,6 +17,9 @@ import {
   Boxes,
 } from "lucide-react";
 import { Brand } from "./Brand";
+import { BranchSelector } from "./BranchSelector";
+import { useBranch } from "../context/BranchContext";
+import { menuPath } from "../lib/branch";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { errorMessage } from "../lib/format";
@@ -73,6 +77,7 @@ const nav = [
   { id: "payments", name: "Configurar pagos", icon: ScanLine, admin: true },
 ];
 export function AppShell() {
+  const { branch } = useBranch();
   const { profile, signOut } = useAuth();
   const toast = useToast();
   const [cashAuditRequest, setCashAuditRequest] = useState(0);
@@ -84,20 +89,7 @@ export function AppShell() {
     () => new Set([profile?.role === "admin" ? "dashboard" : "sales"]),
   );
   const allowed = nav.filter((n) => !n.admin || profile?.role === "admin");
-  // Warm each permitted screen once, after the first paint. Mounted screens
-  // retain their data and forms; navigating only changes their visibility.
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setVisited(
-        new Set(
-          nav
-            .filter((n) => !n.admin || profile?.role === "admin")
-            .map((n) => n.id),
-        ),
-      );
-    }, 150);
-    return () => window.clearTimeout(timer);
-  }, [profile?.role]);
+  // Mount on first visit; retain forms afterwards without fetching in hidden screens.
   const current = allowed.find((n) => n.id === page) ? page : "sales";
   function navigate(id: string) {
     setVisited((previous) => new Set([...previous, id]));
@@ -116,6 +108,7 @@ export function AppShell() {
       )}
       <aside className={mobile ? "sidebar open" : "sidebar"}>
         <Brand />
+        <BranchSelector />
         <span className="nav-label">MI NEGOCIO</span>
         <nav>
           {allowed.map((n) => (
@@ -134,7 +127,7 @@ export function AppShell() {
           <Leaf />
           <h4>Siempre tropical.</h4>
           <p>Tu carta, a un escaneo de distancia.</p>
-          <a href="/menu" target="_blank" rel="noreferrer">
+          <a href={menuPath(branch.id)} target="_blank" rel="noreferrer">
             Ver carta digital <ExternalLink size={14} />
           </a>
         </div>
@@ -180,7 +173,7 @@ export function AppShell() {
           </div>
           <div>
             <span className="live-badge">
-              <Leaf size={13} /> Açaí Tropical
+              <Leaf size={13} /> {branch.name}
             </span>
             <span className="date-label">
               {(() => {
@@ -208,33 +201,35 @@ export function AppShell() {
             .filter((n) => visited.has(n.id) || n.id === current)
             .map(({ id }) => (
               <div key={id} hidden={current !== id}>
-                <Suspense fallback={<Loading />}>
-                  {id === "dashboard" && (
-                    <DashboardPage
-                      onSell={() => navigate("sales")}
-                      onHistory={() => navigate("history")}
-                    />
-                  )}
-                  {id === "sales" && (
-                    <SalesPage
-                      onAuditCash={() => {
-                        setCashAuditRequest((n) => n + 1);
-                        navigate("audit");
-                      }}
-                    />
-                  )}
-                  {id === "history" && <SalesHistory />}
-                  {id === "products" && <ProductsPage />}
-                  {id === "inventory" && (
-                    <InventoryPage active={current === "inventory"} />
-                  )}
-                  {id === "qr" && <QRPage />}
-                  {id === "audit" && (
-                    <AuditPage cashRequest={cashAuditRequest} />
-                  )}
-                  {id === "team" && <TeamPage />}
-                  {id === "payments" && <PaymentSettingsPage />}
-                </Suspense>
+                <SectionVisibility.Provider value={current === id}>
+                  <Suspense fallback={<Loading />}>
+                    {id === "dashboard" && (
+                      <DashboardPage
+                        onSell={() => navigate("sales")}
+                        onHistory={() => navigate("history")}
+                      />
+                    )}
+                    {id === "sales" && (
+                      <SalesPage
+                        onAuditCash={() => {
+                          setCashAuditRequest((n) => n + 1);
+                          navigate("audit");
+                        }}
+                      />
+                    )}
+                    {id === "history" && <SalesHistory />}
+                    {id === "products" && <ProductsPage />}
+                    {id === "inventory" && (
+                      <InventoryPage active={current === "inventory"} />
+                    )}
+                    {id === "qr" && <QRPage />}
+                    {id === "audit" && (
+                      <AuditPage cashRequest={cashAuditRequest} />
+                    )}
+                    {id === "team" && <TeamPage />}
+                    {id === "payments" && <PaymentSettingsPage />}
+                  </Suspense>
+                </SectionVisibility.Provider>
               </div>
             ))}
         </main>

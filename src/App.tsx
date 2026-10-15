@@ -3,12 +3,22 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { CatalogProvider } from "./context/CatalogContext";
 import { Login } from "./features/auth/Login";
-import { PasswordSetup } from "./features/auth/PasswordSetup";
-import { PublicMenu } from "./features/menu/PublicMenu";
-import { AppShell } from "./components/AppShell";
+import { lazy, Suspense } from "react";
 import { Loading, ErrorState } from "./components/States";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { configured } from "./lib/supabase";
+import { BranchProvider } from "./context/BranchContext";
+const PasswordSetup = lazy(() =>
+  import("./features/auth/PasswordSetup").then((m) => ({
+    default: m.PasswordSetup,
+  })),
+);
+const PublicMenu = lazy(() =>
+  import("./features/menu/PublicMenu").then((m) => ({ default: m.PublicMenu })),
+);
+const AppShell = lazy(() =>
+  import("./components/AppShell").then((m) => ({ default: m.AppShell })),
+);
 
 function AuthenticatedApp() {
   const { session, profile, loading, error, recovery, refresh, signOut } =
@@ -71,11 +81,13 @@ function AuthenticatedApp() {
   )
     return <PasswordSetup />;
   return (
-    <CatalogProvider>
-      <PaymentsProvider>
-        <AppShell />
-      </PaymentsProvider>
-    </CatalogProvider>
+    <BranchProvider profile={profile}>
+      <CatalogProvider>
+        <PaymentsProvider>
+          <AppShell />
+        </PaymentsProvider>
+      </CatalogProvider>
+    </BranchProvider>
   );
 }
 
@@ -83,19 +95,29 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        {!configured ? (
-          <div className="auth-single">
-            <ErrorState message="Falta configurar la conexión del sistema. Revisa las variables de entorno de Supabase." />
-          </div>
-        ) : location.pathname === "/menu" ? (
-          <CatalogProvider>
-            <PublicMenu />
-          </CatalogProvider>
-        ) : (
-          <AuthProvider>
-            <AuthenticatedApp />
-          </AuthProvider>
-        )}
+        <Suspense
+          fallback={
+            <div className="auth-single">
+              <Loading />
+            </div>
+          }
+        >
+          {!configured ? (
+            <div className="auth-single">
+              <ErrorState message="Falta configurar la conexión del sistema. Revisa las variables de entorno de Supabase." />
+            </div>
+          ) : location.pathname === "/menu" ? (
+            <BranchProvider>
+              <CatalogProvider>
+                <PublicMenu />
+              </CatalogProvider>
+            </BranchProvider>
+          ) : (
+            <AuthProvider>
+              <AuthenticatedApp />
+            </AuthProvider>
+          )}
+        </Suspense>
       </ToastProvider>
     </ErrorBoundary>
   );

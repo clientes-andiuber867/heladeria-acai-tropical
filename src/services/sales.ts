@@ -1,3 +1,4 @@
+import { branchId } from "../lib/branch";
 import { supabase } from "../lib/supabase";
 import { dateBounds } from "../lib/format";
 import type { CartItem, Sale, DashboardData } from "../types";
@@ -32,6 +33,7 @@ export async function getSale(id: string): Promise<Sale> {
   const { data, error } = await supabase
     .from("sales")
     .select("*,sale_items(*)")
+    .eq("branch_id", branchId())
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -48,6 +50,7 @@ export async function getSales(
   let query = supabase
     .from("sales")
     .select("*,sale_items(*)", { count: "exact" })
+    .eq("branch_id", branchId())
     .gte("created_at", start)
     .lte("created_at", end)
     .order("created_at", { ascending: false })

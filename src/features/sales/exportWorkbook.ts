@@ -61,7 +61,9 @@ export async function buildSalesWorkbook(
       }
     s.mergeCells("A1:A3");
     s.mergeCells(1, 2, 2, bannerEnd);
-    s.getCell("B1").value = "AÇAÍ TROPICAL";
+    s.getCell("B1").value = (
+      filters.branchName || "AÇAÍ TROPICAL"
+    ).toUpperCase();
     s.getCell("B1").font = {
       name: "Calibri",
       size: 23,

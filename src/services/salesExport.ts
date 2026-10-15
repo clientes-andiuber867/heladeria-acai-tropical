@@ -1,7 +1,9 @@
+import { branchId } from "../lib/branch";
 import { supabase } from "../lib/supabase";
 import { dateBounds } from "../lib/format";
 import type { Sale } from "../types";
 export type SalesExportFilters = {
+  branchName?: string;
   from: string;
   to: string;
   method: string;
@@ -20,6 +22,7 @@ export async function getSalesForExport(
     let query = supabase
       .from("sales")
       .select("*,sale_items(*)")
+      .eq("branch_id", branchId())
       .gte("created_at", start)
       .lte("created_at", end)
       .lte("created_at", snapshot)

@@ -1,3 +1,4 @@
+import { useDocumentVisible } from "../../lib/visibility";
 import { useEffect, useState } from "react";
 import {
   Boxes,
@@ -33,6 +34,7 @@ import { InventoryGroups } from "./InventoryGroups";
 import "./inventory.css";
 
 export function InventoryPage({ active }: { active: boolean }) {
+  const documentVisible = useDocumentVisible();
   const { profile } = useAuth();
   const toast = useToast();
   const [deleting, setDeleting] = useState<InventoryItem | null>(null);
@@ -77,7 +79,7 @@ export function InventoryPage({ active }: { active: boolean }) {
     [revision, setRevision] = useState(0);
   const isAdmin = profile?.role === "admin";
   useEffect(() => {
-    if (!active || !isAdmin) return;
+    if (!active || !documentVisible || !isAdmin) return;
     let valid = true;
     setBusy(true);
     setError("");
@@ -114,6 +116,7 @@ export function InventoryPage({ active }: { active: boolean }) {
     };
   }, [
     active,
+    documentVisible,
     isAdmin,
     tab,
     date,

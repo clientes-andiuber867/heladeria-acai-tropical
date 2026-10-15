@@ -1,3 +1,4 @@
+import { usePageVisible } from "../../lib/visibility";
 import { useState, useEffect, type FormEvent } from "react";
 import { Plus, Users, Pencil } from "lucide-react";
 import {
@@ -13,25 +14,30 @@ import { Modal } from "../../components/Modal";
 import { Loading, ErrorState } from "../../components/States";
 import { errorMessage } from "../../lib/format";
 import type { Profile, Role } from "../../types";
+import { useBranch } from "../../context/BranchContext";
 export function TeamPage() {
+  const visible = usePageVisible();
+  const { branches, branch } = useBranch();
   const [members, setMembers] = useState<Profile[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0),
     [editing, setEditing] = useState<Profile | null | undefined>();
   useEffect(() => {
+    if (!visible) return;
     const refresh = (event: Event) => {
       if (event.type === "focus" || (event as CustomEvent).detail === "team")
         setRevision((v) => v + 1);
     };
-    window.addEventListener("section-active", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("section-active", refresh);
     return () => {
-      window.removeEventListener("section-active", refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("section-active", refresh);
     };
-  }, []);
+  }, [visible]);
   useEffect(() => {
+    if (!visible) return;
     let active = true;
     getTeam()
       .then((r) => {
@@ -49,7 +55,7 @@ export function TeamPage() {
     return () => {
       active = false;
     };
-  }, [revision]);
+  }, [revision, visible]);
   return (
     <>
       <div className="page-heading">
@@ -57,7 +63,7 @@ export function TeamPage() {
           <span className="eyebrow">JUNTOS SABE MEJOR</span>
           <h1>Usuarios y roles</h1>
           <p className="muted">
-            Cada persona con su propia cuenta y los permisos adecuados.
+            Administradores del negocio y cajeros de {branch.name}.
           </p>
         </div>
         <button className="primary" onClick={() => setEditing(null)}>
@@ -81,6 +87,12 @@ export function TeamPage() {
                 <span className="pill">
                   {m.role === "admin" ? "Administrador" : "Cajero"}
                 </span>{" "}
+                <p className="muted">
+                  {m.role === "admin"
+                    ? "Todas las sucursales"
+                    : branches.find((b) => b.id === m.branch_id)?.name ||
+                      "Sin sucursal"}
+                </p>
                 <span className={`availability ${m.active ? "on" : ""}`}>
                   {m.active ? "Activo" : "Desactivado"}
                 </span>
@@ -125,6 +137,10 @@ function MemberEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { branches, branch } = useBranch();
+  const [assignedBranch, setAssignedBranch] = useState(
+    member?.branch_id || branch.id,
+  );
   const [name, setName] = useState(member?.display_name || ""),
     [email, setEmail] = useState(member?.email || ""),
     [role, setRole] = useState<Role>(member?.role || "cashier"),
@@ -154,14 +170,27 @@ function MemberEditor({
     setBusy(true);
     try {
       if (member) {
-        await updateMember(member.id, name, role, active);
+        await updateMember(
+          member.id,
+          name,
+          role,
+          active,
+          role === "cashier" ? assignedBranch : null,
+        );
         if (email.trim().toLowerCase() !== member.email || password)
           await updateCredentials(member.id, email, password);
-      } else await createMember({ name, email, password, role });
+      } else
+        await createMember({
+          name,
+          email,
+          password,
+          role,
+          branch_id: role === "cashier" ? assignedBranch : null,
+        });
       toast(
         member
           ? "Usuario actualizado."
-          : "Usuario creado. Debe cambiar su contraseña al ingresar.",
+          : "Usuario creado con su sucursal asignada.",
       );
       onSaved();
     } catch (e) {
@@ -203,6 +232,24 @@ function MemberEditor({
             <option value="admin">Administrador</option>
           </select>
         </label>
+        {role === "cashier" ? (
+          <label>
+            Sucursal asignada
+            <select
+              required
+              value={assignedBranch}
+              onChange={(e) => setAssignedBranch(e.target.value)}
+            >
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <p className="muted">Acceso a todas las sucursales.</p>
+        )}
         {
           <>
             <label>

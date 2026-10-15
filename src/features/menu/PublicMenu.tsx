@@ -14,7 +14,11 @@ import "./publicOrder.css";
 import { Brand } from "../../components/Brand";
 import { ProductCatalog } from "../catalog/ProductCatalog";
 import { useCatalog } from "../../context/CatalogContext";
+import { useBranch } from "../../context/BranchContext";
+import { menuPath } from "../../lib/branch";
 export function PublicMenu() {
+  const { branch } = useBranch();
+  const orderKey = `tropical-public-order.${branch.id}`;
   const { products, loading, refresh } = useCatalog();
   const [open, setOpen] = useState(false);
   const [ordering, setOrdering] = useState(false);
@@ -26,9 +30,7 @@ export function PublicMenu() {
   }, [notice]);
   const [cart, setCart] = useState<OrderLine[]>(() => {
     try {
-      const saved = JSON.parse(
-        sessionStorage.getItem("tropical-public-order") || "[]",
-      );
+      const saved = JSON.parse(sessionStorage.getItem(orderKey) || "[]");
       return Array.isArray(saved)
         ? saved
             .filter(
@@ -49,7 +51,7 @@ export function PublicMenu() {
   });
   useEffect(() => {
     try {
-      sessionStorage.setItem("tropical-public-order", JSON.stringify(cart));
+      sessionStorage.setItem(orderKey, JSON.stringify(cart));
     } catch {
       /* Ordering also works without browser storage. */
     }
@@ -74,11 +76,11 @@ export function PublicMenu() {
   return (
     <div className={`public-menu ${ordering ? "is-ordering" : ""}`}>
       <header>
-        <a href="/menu" aria-label="Inicio de la carta">
+        <a href={menuPath(branch.id)} aria-label="Inicio de la carta">
           <Brand />
         </a>
         <span className="public-tag">
-          <Leaf size={16} /> Fresco. Tropical. Delicioso.
+          <Leaf size={16} /> {branch.name}
         </span>
       </header>
       <section className="menu-hero">

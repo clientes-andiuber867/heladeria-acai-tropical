@@ -8,6 +8,7 @@ import { voidSale } from "../../services/sales";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import type { Sale } from "../../types";
+import { useBranch } from "../../context/BranchContext";
 export function Receipt({
   sale,
   onClose,
@@ -18,6 +19,7 @@ export function Receipt({
   onVoided?: () => void;
 }) {
   const { profile } = useAuth();
+  const { branch } = useBranch();
   const toast = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
   const [printing, setPrinting] = useState(false);
@@ -60,7 +62,7 @@ export function Receipt({
           <div className="document-brand">
             <img src="/logo.png" alt="Açaí Tropical" />
             <div>
-              <strong>Açaí Tropical</strong>
+              <strong>{branch.name}</strong>
               <span>Comprobante de venta</span>
             </div>
           </div>

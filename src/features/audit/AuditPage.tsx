@@ -1,3 +1,4 @@
+import { usePageVisible } from "../../lib/visibility";
 import { useEffect, useState } from "react";
 import {
   Search,
@@ -59,6 +60,7 @@ function activityStyle(action: string) {
   return { tone: "purple", Icon: Users };
 }
 export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
+  const visible = usePageVisible();
   const [scope, setScope] = useState("all");
   const [dates, setDates] = useState({
       from: day(new Date()),
@@ -79,19 +81,20 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
     setSelected(null);
   }, [cashRequest]);
   useEffect(() => {
+    if (!visible) return;
     const refresh = (event: Event) => {
       if (event.type === "focus" || (event as CustomEvent).detail === "audit")
         setRevision((v) => v + 1);
     };
-    window.addEventListener("section-active", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("section-active", refresh);
     return () => {
-      window.removeEventListener("section-active", refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("section-active", refresh);
     };
-  }, []);
+  }, [visible]);
   useEffect(() => {
-    if (!dates.from || !dates.to || dates.from > dates.to) return;
+    if (!visible || !dates.from || !dates.to || dates.from > dates.to) return;
     let active = true;
     const timer = setTimeout(
       () => {
@@ -115,7 +118,7 @@ export function AuditPage({ cashRequest = 0 }: { cashRequest?: number }) {
       active = false;
       clearTimeout(timer);
     };
-  }, [dates, search, page, revision, scope]);
+  }, [dates, search, page, revision, scope, visible]);
   const count = Number(events[0]?.total_count || 0);
   return (
     <>

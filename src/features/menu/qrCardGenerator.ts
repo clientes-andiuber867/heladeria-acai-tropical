@@ -1,6 +1,9 @@
 import QRCode from "qrcode";
 
-export async function generateBrandedQRCard(url: string): Promise<string> {
+export async function generateBrandedQRCard(
+  url: string,
+  branchName = "Açaí Tropical",
+): Promise<string> {
   const canvas = document.createElement("canvas");
   const width = 1200;
   const height = 1800;
@@ -66,7 +69,7 @@ export async function generateBrandedQRCard(url: string): Promise<string> {
       ctx.font = "bold 52px Outfit, sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText("Açaí Tropical", logoX + logoSize + 25, logoY + 45);
+      ctx.fillText(branchName, logoX + logoSize + 25, logoY + 45, 620);
 
       ctx.fillStyle = "#d2bde0";
       ctx.font = "bold 18px 'DM Sans', sans-serif";
@@ -85,7 +88,11 @@ export async function generateBrandedQRCard(url: string): Promise<string> {
   ctx.font = "bold 22px 'DM Sans', sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("E S C A N E A ,   E L I G E   Y   D I S F R U T A", width / 2, 380);
+  ctx.fillText(
+    "E S C A N E A ,   E L I G E   Y   D I S F R U T A",
+    width / 2,
+    380,
+  );
 
   // 4. Headline
   ctx.fillStyle = "#ffffff";

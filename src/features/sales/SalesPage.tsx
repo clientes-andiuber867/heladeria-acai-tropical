@@ -22,8 +22,11 @@ import { completeSale } from "../../services/sales";
 import type { CartItem, Product, Sale } from "../../types";
 import { usePayments, qrUrl } from "../../services/payments";
 import { generateUUID } from "../../lib/uuid";
+import { useBranch } from "../../context/BranchContext";
+import { FIRST_BRANCH } from "../../lib/branch";
 type Pending = Parameters<typeof completeSale>[0];
 export function SalesPage({ onAuditCash }: { onAuditCash: () => void }) {
+  const { branch } = useBranch();
   const {
     settings,
     error: paymentError,
@@ -35,9 +38,18 @@ export function SalesPage({ onAuditCash }: { onAuditCash: () => void }) {
   const { profile } = useAuth();
   const { products, refresh } = useCatalog();
   const toast = useToast();
-  const storageKey = `acai.pending.${profile!.id}`;
+  const storageKey = `acai.pending.${profile!.id}.${branch.id}`;
   const [pending, setPending] = useState<Pending | null>(() => {
     try {
+      const legacy = `acai.pending.${profile!.id}`;
+      if (
+        branch.id === FIRST_BRANCH &&
+        !sessionStorage.getItem(storageKey) &&
+        sessionStorage.getItem(legacy)
+      ) {
+        sessionStorage.setItem(storageKey, sessionStorage.getItem(legacy)!);
+        sessionStorage.removeItem(legacy);
+      }
       return JSON.parse(sessionStorage.getItem(storageKey) || "null");
     } catch {
       return null;
@@ -57,6 +69,14 @@ export function SalesPage({ onAuditCash }: { onAuditCash: () => void }) {
     [receipt, setReceipt] = useState<Sale | null>(null),
     [error, setError] = useState("");
   const submitting = useRef(false);
+  useEffect(() => {
+    const protectDraft = (event: Event) => {
+      if (items.length || pending) event.preventDefault();
+    };
+    window.addEventListener("branch-before-change", protectDraft);
+    return () =>
+      window.removeEventListener("branch-before-change", protectDraft);
+  }, [items.length, pending]);
   const total =
     items.reduce(
       (n, i) => n + Math.round(i.product.price * 100) * i.quantity,

@@ -1,3 +1,4 @@
+import { branchId } from "../lib/branch";
 import { supabase } from "../lib/supabase";
 export type CashShift = {
   id: string;
@@ -18,6 +19,7 @@ export async function currentShift(userId: string): Promise<CashShift | null> {
   const { data, error } = await supabase
     .from("cash_shifts")
     .select("id")
+    .eq("branch_id", branchId())
     .eq("cashier_id", userId)
     .eq("status", "open")
     .maybeSingle();
@@ -50,6 +52,7 @@ export async function recentShifts() {
   const { data, error } = await supabase
     .from("cash_shifts")
     .select("*,profiles!cashier_id(display_name)")
+    .eq("branch_id", branchId())
     .order("opened_at", { ascending: false })
     .limit(20);
   if (error) throw error;

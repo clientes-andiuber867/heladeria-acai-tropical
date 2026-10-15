@@ -40,7 +40,6 @@ export function Login() {
           password,
         });
         if (error) throw error;
-        void supabase.rpc("record_sign_in");
       }
     } catch (e) {
       setError(errorMessage(e));

@@ -1,3 +1,5 @@
+import { usePageVisible } from "../../lib/visibility";
+import { branchName, holdBranch } from "../../lib/branch";
 import { useEffect, useState } from "react";
 import {
   ReceiptText,
@@ -23,20 +25,23 @@ import { day, stamp, orderCode, money, errorMessage } from "../../lib/format";
 import { Receipt } from "./Receipt";
 import type { Sale } from "../../types";
 export function SalesHistory() {
+  const visible = usePageVisible();
   const { profile } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
   const isAdmin = profile?.role === "admin";
   const [today, setToday] = useState(day(new Date()));
   useEffect(() => {
+    if (!visible) return;
     const update = () => setToday(day(new Date()));
+    update();
     const timer = setInterval(update, 15000);
     window.addEventListener("focus", update);
     return () => {
       clearInterval(timer);
       window.removeEventListener("focus", update);
     };
-  }, []);
+  }, [visible]);
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("");
   const [totals, setTotals] = useState<CollectionTotals | null>(null);
@@ -53,19 +58,20 @@ export function SalesHistory() {
     [revision, setRevision] = useState(0),
     [selected, setSelected] = useState<Sale | null>(null);
   useEffect(() => {
+    if (!visible) return;
     const refresh = (event: Event) => {
       if (event.type === "focus" || (event as CustomEvent).detail === "history")
         setRevision((v) => v + 1);
     };
-    window.addEventListener("section-active", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("section-active", refresh);
     return () => {
-      window.removeEventListener("section-active", refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("section-active", refresh);
     };
-  }, []);
+  }, [visible]);
   useEffect(() => {
-    if (!dates.from || !dates.to || dates.from > dates.to) return;
+    if (!visible || !dates.from || !dates.to || dates.from > dates.to) return;
     let active = true;
 
     setUpdating(true);
@@ -104,12 +110,13 @@ export function SalesHistory() {
     return () => {
       active = false;
     };
-  }, [dates, page, revision, method, status, isAdmin, today]);
+  }, [dates, page, revision, method, status, isAdmin, today, visible]);
   async function exportExcel() {
     if (!isAdmin || exporting) return;
+    const releaseBranch = holdBranch();
     setExporting(true);
     setExportError("");
-    const filters = { ...dates, method, status };
+    const filters = { ...dates, method, status, branchName: branchName() };
     try {
       const [{ getSalesForExport }, { downloadSalesWorkbook }] =
         await Promise.all([
@@ -120,6 +127,7 @@ export function SalesHistory() {
     } catch (e) {
       setExportError(errorMessage(e));
     } finally {
+      releaseBranch();
       setExporting(false);
     }
   }

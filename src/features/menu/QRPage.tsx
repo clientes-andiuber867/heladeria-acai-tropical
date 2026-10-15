@@ -4,15 +4,18 @@ import { Copy, Download, ExternalLink, ScanLine, Sparkles } from "lucide-react";
 import { Brand } from "../../components/Brand";
 import { useToast } from "../../context/ToastContext";
 import { generateBrandedQRCard } from "./qrCardGenerator";
+import { menuPath } from "../../lib/branch";
+import { useBranch } from "../../context/BranchContext";
 
 export function QRPage() {
+  const { branch } = useBranch();
   const toast = useToast();
   const [qr, setQr] = useState("");
   const [cardDataUrl, setCardDataUrl] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   const url = new URL(
-    "/menu",
+    menuPath(branch.id),
     import.meta.env.VITE_PUBLIC_SITE_URL || location.origin,
   ).href;
 
@@ -26,18 +29,19 @@ export function QRPage() {
       .then(setQr)
       .catch(() => toast("No se pudo generar el código QR.", true));
 
-    generateBrandedQRCard(url)
+    generateBrandedQRCard(url, branch.name)
       .then(setCardDataUrl)
       .catch((e) => console.error("Error generating card:", e));
-  }, [url]);
+  }, [url, branch.name]);
 
   async function handleDownloadCard() {
     try {
       setDownloading(true);
-      const dataUrl = cardDataUrl || (await generateBrandedQRCard(url));
+      const dataUrl =
+        cardDataUrl || (await generateBrandedQRCard(url, branch.name));
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = "carta-acai-tropical-diseno.png";
+      a.download = `carta-${branch.id}-diseno.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -55,7 +59,9 @@ export function QRPage() {
         <div>
           <span className="eyebrow">EL SABOR SE COMPARTE</span>
           <h1>Tu carta, siempre a mano</h1>
-          <p className="muted">Un escaneo. Todos tus sabores.</p>
+          <p className="muted">
+            {branch.name} · Carta exclusiva de esta sucursal.
+          </p>
         </div>
       </div>
       <div className="qr-layout">
@@ -70,7 +76,7 @@ export function QRPage() {
           {qr && (
             <img className="qr-image" src={qr} alt="QR de la carta pública" />
           )}
-          <span className="qr-caption">Nuestra carta digital</span>
+          <span className="qr-caption">{branch.name}</span>
           <p>Açaí · Helados · Comida · Postres</p>
         </section>
         <section className="panel qr-settings">
@@ -125,7 +131,7 @@ export function QRPage() {
             {qr && (
               <a
                 className="secondary"
-                download="codigo-qr-acai.png"
+                download={`codigo-qr-${branch.id}.png`}
                 href={qr}
               >
                 <Sparkles size={16} /> Solo QR

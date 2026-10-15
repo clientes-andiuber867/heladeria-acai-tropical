@@ -1,5 +1,6 @@
 export type Role = "admin" | "cashier";
 export type Profile = {
+  branch_id: string | null;
   id: string;
   display_name: string;
   email: string;

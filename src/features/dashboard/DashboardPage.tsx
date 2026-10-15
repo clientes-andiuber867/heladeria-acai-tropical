@@ -1,3 +1,5 @@
+import { usePageVisible } from "../../lib/visibility";
+import { branchId } from "../../lib/branch";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -25,6 +27,7 @@ export function DashboardPage({
   onSell: () => void;
   onHistory: () => void;
 }) {
+  const visible = usePageVisible();
   const [rankingOpen, setRankingOpen] = useState(false);
   const { products } = useCatalog();
   const [dates, setDates] = useState({
@@ -37,6 +40,7 @@ export function DashboardPage({
     [loading, setLoading] = useState(true),
     [selected, setSelected] = useState<Sale | null>(null);
   useEffect(() => {
+    if (!visible) return;
     const refresh = (event: Event) => {
       if (
         event.type === "focus" ||
@@ -44,15 +48,15 @@ export function DashboardPage({
       )
         setRevision((v) => v + 1);
     };
-    window.addEventListener("section-active", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("section-active", refresh);
     return () => {
-      window.removeEventListener("section-active", refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("section-active", refresh);
     };
-  }, []);
+  }, [visible]);
   useEffect(() => {
-    if (!dates.from || !dates.to || dates.from > dates.to) return;
+    if (!visible || !dates.from || !dates.to || dates.from > dates.to) return;
     let active = true;
 
     getDashboard(dates.from, dates.to)
@@ -71,20 +75,26 @@ export function DashboardPage({
     return () => {
       active = false;
     };
-  }, [dates, revision]);
+  }, [dates, revision, visible]);
   useEffect(() => {
+    if (!visible) return;
     const c = supabase
-      .channel("dashboard-sales")
+      .channel("dashboard-sales-" + branchId())
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "sales" },
+        {
+          event: "*",
+          schema: "public",
+          table: "sales",
+          filter: `branch_id=eq.${branchId()}`,
+        },
         () => setRevision((v) => v + 1),
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(c);
     };
-  }, []);
+  }, [visible]);
   return (
     <>
       <div className="page-heading">

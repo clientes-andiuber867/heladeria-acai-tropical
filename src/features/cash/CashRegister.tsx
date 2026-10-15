@@ -1,3 +1,4 @@
+import { usePageVisible } from "../../lib/visibility";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Wallet, LockKeyhole } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -21,6 +22,7 @@ export function CashRegister({
   revision: string;
   onAuditCash: () => void;
 }) {
+  const visible = usePageVisible();
   const { profile } = useAuth();
   const [shift, setShift] = useState<CashShift | null>(null),
     [loading, setLoading] = useState(true),
@@ -44,9 +46,10 @@ export function CashRegister({
     }
   }, [profile!.id, onReady]);
   useEffect(() => {
-    void refresh();
-  }, [refresh, revision]);
+    if (visible) void refresh();
+  }, [refresh, revision, visible]);
   useEffect(() => {
+    if (!visible) return;
     const ch = supabase
       .channel("cash-register-" + profile!.id)
       .on(
@@ -77,14 +80,15 @@ export function CashRegister({
 
       window.removeEventListener("focus", refresh);
     };
-  }, [refresh, profile!.id]);
+  }, [refresh, profile!.id, visible]);
   useEffect(() => {
+    if (!visible) return;
     const tick = setInterval(() => {
       if (shift && day(new Date(shift.opened_at)) !== day(new Date()))
         onReady(false);
     }, 15000);
     return () => clearInterval(tick);
-  }, [shift, onReady]);
+  }, [shift, onReady, visible]);
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);

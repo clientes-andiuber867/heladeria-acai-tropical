@@ -1,3 +1,4 @@
+import { branchId } from "../lib/branch";
 import { supabase } from "../lib/supabase";
 import { dateBounds } from "../lib/format";
 export type InventoryItem = {
@@ -47,6 +48,7 @@ export async function getInventoryGroups(): Promise<string[]> {
   const { data, error } = await supabase
     .from("inventory_groups")
     .select("name")
+    .eq("branch_id", branchId())
     .order("name");
   if (error) throw error;
   return (data || []).map((g) => g.name);
@@ -97,7 +99,11 @@ export async function getInventoryMovements(
   const bounds = dateBounds(from, to);
   let query = supabase
     .from("inventory_movements")
-    .select("*", { count: "exact" })
+    .select(
+      "id,item_id,kind,quantity_before,quantity_after,delta,note,actor_name,created_at,item_name,item_unit",
+      { count: "exact" },
+    )
+    .eq("branch_id", branchId())
     .gte("created_at", bounds.start)
     .lte("created_at", bounds.end)
     .order("created_at", { ascending: false })

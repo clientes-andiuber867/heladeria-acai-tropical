@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { branchFetch } from "./branch";
 
 const url =
   import.meta.env.VITE_SUPABASE_URL ||
@@ -18,6 +19,7 @@ try {
   /* Storage can be unavailable in restricted browsers. */
 }
 export const supabase = createClient(url, key, {
+  global: { fetch: branchFetch },
   auth: {
     persistSession: false,
     autoRefreshToken: true,

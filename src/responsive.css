@@ -284,3 +284,55 @@
     min-height: 36px;
   }
 }
+
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px 8px;
+  border: 1px solid #e5dce9;
+  border-radius: 12px;
+  min-width: 0;
+}
+.branch-selector label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  margin: 0;
+  color: #65516d;
+}
+.branch-selector select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 3px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.branch-selector > svg {
+  flex-shrink: 0;
+}
+.branch-selector .icon {
+  flex-shrink: 0;
+}
+.app-shell .branch-selector {
+  border-color: #ffffff35;
+  background: #ffffff08;
+}
+.app-shell .branch-selector label {
+  color: #e7dcec;
+}
+.app-shell .branch-selector select {
+  color: #30203f;
+}
+.app-shell .branch-selector + .nav-label {
+  margin-top: 8px;
+}
+.app-shell .sidebar {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.app-shell .sidebar > * {
+  flex-shrink: 0;
+}

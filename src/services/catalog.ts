@@ -1,10 +1,17 @@
+import { branchId } from "../lib/branch";
 import { optimizeProductImage } from "../lib/images";
 import { supabase } from "../lib/supabase";
 import { generateUUID } from "../lib/uuid";
 import type { Product, ProductInput } from "../types";
-export async function getProducts(includeArchived = false): Promise<Product[]> {
-  let query = supabase.from("products").select("*").order("created_at");
-  if (!includeArchived) query = query.eq("archived", false);
+export async function getProducts(archived = false): Promise<Product[]> {
+  const query = supabase
+    .from("products")
+    .select(
+      "id,name,description,price,category,image,available,archived,updated_at",
+    )
+    .eq("branch_id", branchId())
+    .eq("archived", archived)
+    .order("created_at");
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
@@ -70,6 +77,7 @@ export async function getCategories(): Promise<string[]> {
   const { data, error } = await supabase
     .from("categories")
     .select("name")
+    .eq("branch_id", branchId())
     .order("sort_order")
     .order("name");
   if (error) throw error;
@@ -96,7 +104,10 @@ export async function deleteCategory(name: string, replacement: string) {
 export async function deleteProduct(id: string) {
   const { error } = await supabase.rpc("delete_product", { p_id: id });
   if (error) {
-    if (error.code === "PGRST202") throw new Error("Falta aplicar la migración de eliminación de productos en la base de datos.");
+    if (error.code === "PGRST202")
+      throw new Error(
+        "Falta aplicar la migración de eliminación de productos en la base de datos.",
+      );
     throw error;
   }
 }

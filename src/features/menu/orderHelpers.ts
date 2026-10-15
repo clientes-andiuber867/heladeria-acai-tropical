@@ -2,6 +2,7 @@ import { supabase } from "../../lib/supabase";
 import { money } from "../../lib/format";
 import type { Product } from "../../types";
 import type { PaymentSettings } from "../../services/payments";
+import type { Branch } from "../../lib/branch";
 export const ORDER_PHONE = "59171661241";
 export type OrderLine = { product: Product; quantity: number };
 export const orderTotal = (lines: OrderLine[]) =>
@@ -23,10 +24,12 @@ export function orderWhatsAppUrl(
   name: string,
   note: string,
   useWeb = false,
+  branch?: Branch,
 ) {
   const text = [
     "*AÇAÍ TROPICAL*",
     "PEDIDO POR WHATSAPP",
+    branch ? `*Sucursal:* ${branch.name}` : "",
     "",
     "¡Hola, Açaí Tropical! \u{1F44B}\nQuiero realizar el siguiente pedido:",
     "",
@@ -54,6 +57,6 @@ export function orderWhatsAppUrl(
     .trim();
   const encoded = encodeURIComponent(text);
   return useWeb
-    ? `https://web.whatsapp.com/send?phone=${ORDER_PHONE}&text=${encoded}`
-    : `https://wa.me/${ORDER_PHONE}?text=${encoded}`;
+    ? `https://web.whatsapp.com/send?phone=${branch?.order_phone || ORDER_PHONE}&text=${encoded}`
+    : `https://wa.me/${branch?.order_phone || ORDER_PHONE}?text=${encoded}`;
 }

@@ -11,6 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Modal } from "../../components/Modal";
+import { useBranch } from "../../context/BranchContext";
 import { money, errorMessage } from "../../lib/format";
 import { qrUrl, type PaymentSettings } from "../../services/payments";
 import { getProducts } from "../../services/catalog";
@@ -32,6 +33,7 @@ export function PublicOrder({
   onClose: () => void;
   refreshCatalog: () => Promise<void>;
 }) {
+  const { branch } = useBranch();
   const [payment, setPayment] = useState<PaymentSettings | null>(null),
     [loading, setLoading] = useState(true);
   const [error, setError] = useState(""),
@@ -100,7 +102,9 @@ export function PublicOrder({
       const mobile =
         /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      window.location.assign(orderWhatsAppUrl(lines, name, note, !mobile));
+      window.location.assign(
+        orderWhatsAppUrl(lines, name, note, !mobile, branch),
+      );
     } catch (e) {
       setError(errorMessage(e));
     } finally {

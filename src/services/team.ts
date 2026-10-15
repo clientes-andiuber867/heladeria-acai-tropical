@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { branchId } from "../lib/branch";
 
 import type { Profile, Role } from "../types";
 
@@ -7,9 +8,10 @@ export async function getTeam(): Promise<Profile[]> {
 
     .from("profiles")
 
-    .select("*")
+    .select("id,display_name,email,role,active,must_change_password,branch_id")
 
     .is("deleted_at", null)
+    .or(`role.eq.admin,branch_id.eq.${branchId()}`)
 
     .order("display_name");
 
@@ -26,6 +28,7 @@ export async function updateMember(
   role: Role,
 
   active: boolean,
+  branch: string | null,
 ) {
   const { error } = await supabase.rpc("update_team_member", {
     p_id: id,
@@ -35,12 +38,14 @@ export async function updateMember(
     p_role: role,
 
     p_active: active,
+    p_branch_id: branch,
   });
 
   if (error) throw error;
 }
 
 export async function createMember(input: {
+  branch_id: string | null;
   name: string;
 
   email: string;
